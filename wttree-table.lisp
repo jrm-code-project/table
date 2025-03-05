@@ -98,6 +98,10 @@
 (defmethod table/size ((table wttree-table))
   (node/size (representation table)))
 
+(defmethod table/subset? ((sub wttree-table) (super wttree-table) &optional (test #'eql))
+  (and (eq (test sub) (test super))
+       (node/subset? (test sub) (representation sub) (representation super) test)))
+
 (defmethod table/test ((table wttree-table))
   (test table))
 

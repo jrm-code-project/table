@@ -226,6 +226,99 @@
              (t-join (node/k min-node) (node/v min-node)
                      node1 (node/remove-minimum node2))))))
 
+(defun node/concat (key<? left right)
+  (cond ((null left)  right)
+        ((null right)  left)
+        (t (let ((min-node (node/minimum right)))
+	     (node/concat3 key<? (node/k min-node) (node/v min-node) left
+			   (node/remove-minimum right))))))
+
+(defun node/concat3 (key<? k v left right)
+  (cond ((null left)  (node/add key<? right k v))
+        ((null right) (node/add key<? left k v))
+        (t
+         (let ((w1 (node/weight left))
+               (w2 (node/weight right)))
+           (cond ((overweight? w1 w2)
+                  (call-with-node right
+                    (lambda (k2 v2 l2 r2)
+                      (t-join k2 v2 (node/concat3 key<? k v left l2) r2))))
+                 ((overweight? w2 w1)
+                  (call-with-node left
+                    (lambda (k1 v1 l1 r1)
+                      (t-join k1 v1 l1 (node/concat3 key<? k v r1 right)))))
+                 (t
+                  (n-join k v left right)))))))
+                                    
+(defun node/split-lt (key<? node x)
+  (cond ((null node)  nil)
+	((funcall key<? x (node/k node))
+	 (node/split-lt key<? (node/l node) x))
+	((funcall key<? (node/k node) x)
+	 (node/concat3 key<? (node/k node) (node/v node) (node/l node)
+		       (node/split-lt key<? (node/r node) x)))
+	(t (node/l node))))
+
+(defun node/split-gt (key<? node x)
+  (cond ((null node)  nil)
+	((funcall key<? (node/k node) x)
+	 (node/split-gt key<? (node/r node) x))
+	((funcall key<? x (node/k node))
+	 (node/concat3 key<? (node/k node) (node/v node)
+		       (node/split-gt key<? (node/l node) x) (node/r node)))
+	(t (node/r node))))
+
+(defun node/union (key<? left right)
+  (check-type key<? function)
+  (labels ((recur (key<? left right)
+             (declare (type function key<?))
+             (cond ((null left) right)
+                   ((null right) left)
+                   (t (call-with-node right
+                        (lambda (ak av l r)
+                          (let ((l1 (node/split-lt key<? left ak))
+                                (r1 (node/split-gt key<? left ak)))
+                          (node/concat3 key<? ak av (recur key<? l1 l) (recur key<? r1 r)))))))))
+    (recur key<? left right)))
+
+(defun node/union-merge (key<? left right merge)
+  (check-type key<? function)
+  (check-type merge function)
+  (labels ((recur (key<? left right merge)
+             (declare (type function key<? merge))
+             (cond ((null left)    nil)
+	           ((null right)  left)
+	           (t
+	            (call-with-node right
+                      (lambda (ak av l r)
+                        (let* ((node1  (node/find key<? ak left))
+		               (l1     (node/split-lt key<? left ak))
+		               (r1     (node/split-gt key<? left ak))
+		               (value  (if node1
+				           (funcall merge ak av (node/v node1))
+				           av)))
+		          (node/concat3 key<? ak value
+			                (recur key<? l1 l merge)
+			                (recur key<? r1 r merge)))))))))
+    (recur key<? left right merge)))
+
+(defun node/difference (key<? left right)
+  (check-type key<? function)
+  (labels ((recur (key<? left right)
+             (declare (type function key<?))
+             (cond ((null left)   nil)
+                   ((null right)   left)
+                   (t
+                    (call-with-node right
+                      (lambda (ak av l r)
+                        (declare (ignore av))
+                        (let ((l1  (node/split-lt key<? left ak))
+                              (r1  (node/split-gt key<? left ak)))
+                          (node/concat key<?
+                                       (recur key<? l1 l)
+                                       (recur key<? r1 r)))))))))
+    (recur key<? left right)))
+
 (defun node/add (key<? node k v)
   (check-type key<? function)
   (labels ((recur (key<? node k v)
@@ -320,3 +413,43 @@
                        (cons (node/v node) vals))
                      '()
                      node))
+
+(defun node/intersection (key<? left right)
+  (check-type key<? function)
+  (labels ((recur (key<? left right)
+             (declare (type function key<?))
+             (if (or (null left) (null right))
+                 nil
+                 (call-with-node right
+                   (lambda (ak av l r)
+                     (let ((l1 (node/split-lt key<? left ak))
+                           (r1 (node/split-gt key<? left ak)))
+                       (if (node/find key<? left ak)
+                           (node/concat3 key<? ak av (recur key<? l1 l)
+                                         (recur key<? r1 r))
+                           (node/concat key<? (recur key<? l1 l) (recur key<? r1 r)))))))))
+    (recur key<? left right)))
+
+(defun node/subset? (key<? left right test)
+  "T if all keys in LEFT have mappings in RIGHT."
+  (check-type key<? function)
+  (check-type test function)
+  (labels ((recur (key<? left right test)
+             (declare (type function key<? test))
+             (or (null left)
+                 (and (<= (node/size left) (node/size right))
+                      (call-with-node left
+                        (lambda (k v l r)
+                          (cond ((funcall key<? k (node/k right))
+                                 (and (recur key<? l (node/l right) test)
+                                      (let ((node (node/find key<? right k)))
+                                        (and node (funcall test v (node/v node))))
+                                      (recur key<? r right test)))
+                                ((funcall key<? (node/k right) k)
+                                 (and (recur key<? r (node/r right) test)
+                                      (let ((node (node/find key<? right k)))
+                                        (and node (funcall test v (node/v node))))
+                                      (recur key<? l right test)))
+                                (t (and (recur key<? l (node/l right) test)
+                                        (recur key<? r (node/r right) test))))))))))
+    (recur key<? left right test)))

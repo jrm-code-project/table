@@ -5,6 +5,10 @@
 (defun table/empty? (table)
   (zerop (table/size table)))
 
+(defun table/equal? (left right &optional (test #'eql))
+  (and (table/subset?  left right test)
+       (table/subset? right  left test)))
+
 ;;; Coercions
 (defmethod update-instance-for-different-class :after ((previous alist-table) (current hash-table) &rest initargs)
   (declare (ignore initargs))
@@ -141,6 +145,14 @@
       (table/insert! table i (format nil "~r" i)))))
 
 (defun table/test-table (representation)
+  (dolist (representation2 '(alist plist hash-table wttree))
+    (let ((table1 (make-table representation))
+          (table2 (make-table representation2)))
+      (dotimes (i 10)
+        (table/insert! table1 i (format nil "~r" i))
+        (table/insert! table2 i (format nil "~r" i)))
+      (assert (table/equal? table1 table2 #'string=))))
+
   (let ((mtable (make-table representation)))
     (do ((itable (make-table representation) (table/insert itable i (format nil "~r" i)))
          (i 0 (1+ i)))
