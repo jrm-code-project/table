@@ -29,7 +29,7 @@ Returns T iff _object_ is a table.
 Returns T if there are no entries in _table_.
 
 `table/equal?` _table1_ _table2_ `&optional` (_test_ `#'eql`)\
-Returns T if _table1_ and _table2_ contain the same enties.  Entry values are compared using _test_.
+Returns T if _table1_ and _table2_ contain the same entries.  Entry values are compared using _test_.
 
 `table/subset?` _subtable_ _supertable_ `&optional` (_test_ `#'eql`)\
 Returns T if every entry in _subtable_ is contained in _supertable_.  Entry values are compare using _test_.
