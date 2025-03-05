@@ -36,6 +36,9 @@ Returns T if every entry in _subtable_ is contained in _supertable_.  Entry valu
 `metadata` _table_\
 Returns a plist associated with the table that can be used for metadata.  Guaranteed to not be used by the implementation.
 
+`representation` _table_\
+Returns the underlying representation of the table (an alist, plist, hashtable, or wttree-node).  Exposes the rep.
+
 `table/keys` _table_\
 Returns a list of the keys in _table_.  List structure may be shared, so do not modify it.
 

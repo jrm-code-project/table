@@ -58,7 +58,7 @@
   (declare (ignore initargs))
   (setf (representation current)
         (multiple-value-bind (keys values) (scan-plist (representation previous))
-          (collect-hash keys values))))
+          (collect-hash keys values :test (getf initargs :test 'eql)))))
 
 (defmethod update-instance-for-different-class :after ((previous plist-table) (current wttree-table) &rest initargs)
   (declare (ignore initargs))
@@ -76,9 +76,10 @@
   (declare (ignore initargs))
   (setf (representation current)
         (multiple-value-bind (keys values) (scan-node (representation previous))
-          (collect-hash keys values :test (if (member (test previous) (list #'lessp 'lessp))
-                                              'equalp
-                                              'equal)))))
+          (collect-hash keys values :test (or (getf :test initargs)
+                                              (if (member (test previous) (list #'lessp 'lessp))
+                                                  'equalp
+                                                  'equal))))))
 
 (defmethod update-instance-for-different-class :after ((previous wttree-table) (current plist-table) &rest initargs)
   (declare (ignore initargs))
