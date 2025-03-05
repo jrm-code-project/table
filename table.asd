@@ -18,6 +18,18 @@
                (:file "hash-table"   :depends-on ("generics" "package"))
                (:file "node"         :depends-on ("package"))
                (:file "package")
-               (:file "plist-table"  :depends-on ("generics" "package"))
-               (:file "table"        :depends-on ("compare" "generics" "node" "package"))
-               (:file "wttree-table" :depends-on ("compare" "generics" "node" "package")))))
+               (:file "plist-table"  :depends-on ("generics"
+                                                  "package"))
+               (:file "table"        :depends-on ("alist-table"
+                                                  "compare"
+                                                  "generics"
+                                                  "hash-table"
+                                                  "node"
+                                                  "package"
+                                                  "plist-table"
+                                                  "wttree-table"))
+               (:file "wttree-table" :depends-on ("compare"
+                                                  "generics"
+                                                  "node"
+                                                  "package"))
+               ))

@@ -22,7 +22,7 @@
   (declare (optimizable-series-function 2))
   (scan-node (representation table)))
 
-(defun table/copy ((table wttree-table))
+(defmethod table/copy ((table wttree-table))
   (make-instance 'wttree-table :metadata (copy-list (metadata table))
                                :representation (representation table)
                                :test (test table)))

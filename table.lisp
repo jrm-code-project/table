@@ -72,7 +72,7 @@
   (declare (ignore initargs))
   (setf (representation current)
         (multiple-value-bind (keys values) (scan-node (representation previous))
-          (collect-hash keys values :test (if (member (test previous) (list #'lessp #'less? 'lessp 'less?))
+          (collect-hash keys values :test (if (member (test previous) (list #'lessp 'lessp))
                                               'equalp
                                               'equal)))))
 

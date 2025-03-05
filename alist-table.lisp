@@ -25,7 +25,7 @@
                  :representation (mapcar (lambda (entry) (cons (car entry) (cdr entry)))
                                          (representation table))
                  :metadata (copy-list (metadata table))
-                 :test test))
+                 :test (test table)))
 
 (defmethod fold-table (procedure base (table alist-table))
   (fold-left (lambda (base entry) (funcall procedure base (car entry) (cdr entry)))

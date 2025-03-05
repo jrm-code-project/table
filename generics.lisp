@@ -219,7 +219,7 @@
     (declare (ignore initargs))
     (error "Not a table: ~S" object))
   (:method ((object hash-table) &rest initargs)
-    (declare (ignore keys initargs))
+    (declare (ignore initargs))
     (representation object)))
 
 (defgeneric table->plist (object)
