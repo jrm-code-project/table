@@ -39,7 +39,7 @@ Returns T if every entry in _subtable_ is contained in _supertable_.  Entry valu
 `metadata` _table_\
 Returns a plist associated with the table that can be used for metadata.  Guaranteed to not be used by the implementation.
 
-`table/keys` _table\_
+`table/keys` _table_\
 Returns a list of the keys in _table_.  List structure may be shared, so do not modify it.
 
 `table/values` _table_\
@@ -55,7 +55,7 @@ Returns the predicate used to compare keys in _table_.
 
 These operations modify the table object and possibly modify any shared data structures within in the table.
 
-`table/clear!` _table\_
+`table/clear!` _table_\
 Delete all entries from _table_.
 
 `table/delete` _table_ _key_\
