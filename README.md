@@ -13,11 +13,8 @@ You will need `alexandria`, `closer-mop`, `named-let`, `series`, and `str`
 
 ### Constructors
 
-`make-table` _implementation_ `&rest` _initargs_\
-Create an empty table.  Supported implementations are `'alist`, `'plist`, `'hash-table`, and `'wttree`
-
-`make-singleton-table` _implementation_ _key_ _value_ `&rest` _initargs_\
-Create a table with a single entry.
+`make-instance` _implementation_ `&rest` _initargs_\
+Create an empty table.  Supported implementations are `'alist-table`, `'plist-table`, `'hash-table`, and `'wttree-table`
 
 ### Predicates
 

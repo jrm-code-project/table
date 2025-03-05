@@ -4,17 +4,6 @@
 
 ;;; PLIST-TABLE
 ;; A table implemented as a property list.  Eql is used to compare the keys.
-(defmethod make-table ((implementation (eql 'plist)) &rest initargs &key (metadata '()))
-  (declare (ignore initargs))
-  (make-instance 'plist-table
-                 :representation ()
-                 :metadata metadata))
-
-(defmethod make-singleton-table ((implementation (eql 'plist)) key value &rest keys &key (metadata '()))
-  (declare (ignore keys))
-  (make-instance 'plist-table
-                 :representation (list key value)
-                 :metadata metadata))
 
 (defun collect-plist-table (key-series value-series)
   (declare (optimizable-series-function))

@@ -4,14 +4,6 @@
 
 ;;; ALIST-TABLE
 ;; A table implemented as an association list.  The test function is used to compare the keys.
-(defmethod make-table ((implementation (eql 'alist)) &rest initargs &key (test #'eql))
-  (declare (ignore initargs))
-  (make-instance 'alist-table :representation '() :test test))
-
-(defmethod make-singleton-table ((implementation (eql 'alist)) key value &rest initargs &key (test #'eql))
-  (declare (ignore initargs))
-  (make-instance 'alist-table :representation (list (cons key value)) :test test))
-
 (defun collect-alist-table (key-series value-series)
   (declare (optimizable-series-function))
   (make-instance 'alist-table :representation (collect-alist key-series value-series)))
@@ -173,4 +165,4 @@
         (t (error "Unknown test function: ~s" (test table)))))
 
 (defmethod table/values ((table alist-table))
-  (mapcar #'cdr (representation table)))
+  (mapcar #'cdr (representation  table)))

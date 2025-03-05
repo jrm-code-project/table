@@ -2,18 +2,6 @@
 
 (in-package "TABLE")
 
-(defmethod make-table ((implementation (eql 'wttree)) &rest keys &key (metadata '()) (test #'less))
-  (declare (ignore keys))
-  (make-instance 'wttree-table :metadata metadata
-                               :representation nil
-                               :test test))
-
-(defmethod make-singleton-table ((implementation (eql 'wttree)) key value &rest keys &key (metadata '()) (test #'less))
-  (declare (ignore keys))
-  (make-instance 'wttree-table :metadata metadata
-                               :representation (make-node key value nil nil 1)
-                               :test test))
-
 (defun collect-wttree-table (key-series value-series &optional (test #'less))
   (declare (optimizable-series-function))
   (make-instance 'wttree-table :representation (collect-node key-series value-series test)))
@@ -34,10 +22,10 @@
   (make-instance 'wttree-table :metadata (copy-list (metadata table)) :representation nil :test (test table)))
 
 (defmethod table/clear! ((table wttree-table))
-  (setf (representation table) nil))
+  (setf (rep table) nil))
 
 (defmethod table/delete ((table wttree-table) key)
-  (setf (representation table) (node/remove (test table) (representation table) key)))
+  (setf (rep table) (node/remove (test table) (representation table) key)))
 
 (defmethod table/insert ((table wttree-table) key value)
   (make-instance 'wttree-table

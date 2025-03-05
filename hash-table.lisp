@@ -4,18 +4,6 @@
 
 ;;; HASH-TABLE
 ;; A table implemented as a hash table.  The test function is used to compare the keys.
-(defmethod make-table ((implementation (eql 'hash-table)) &rest initargs &key (metadata '()))
-  (make-instance 'hash-table
-                 :representation (apply #'make-hash-table (list* :allow-other-keys t initargs))
-                 :metadata metadata))
-
-(defmethod make-singleton-table ((implementation (eql 'hash-table)) key value &rest initargs &key (metadata '()))
-  (let ((table (apply #'make-hash-table (list* :allow-other-keys t initargs))))
-    (setf (gethash key table) value)
-    (make-instance 'hash-table
-                   :representation table
-                   :metadata metadata)))
-
 (defun collect-hash-table (key-series value-series)
   (declare (optimizable-series-function))
   (make-instance 'hash-table :representation (collect-hash key-series value-series)))

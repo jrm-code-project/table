@@ -27,8 +27,8 @@
 
 (defclass table (metadata)
   ((representation :accessor representation
-                   :initarg :representation
-                   :initform nil)))
+        :initarg :representation
+        :initform nil)))
 
 (defgeneric table? (object)
   (:documentation "Returns T if object is a table, NIL otherwise.")
@@ -43,16 +43,6 @@
 (defmethod print-object ((table table) stream)
   (print-unreadable-object (table stream :type t)
     (format stream "~d ~a" (table/size table) (table/test table))))
-
-(defgeneric make-table (implementation &rest initargs)
-  (:documentation "Creates a new table with the given implementation.")
-  (:method (implementation &rest initargs)
-    (error "Unrecognized table implementation.")))
-
-(defgeneric make-singleton-table (implementation key value &rest initargs)
-  (:documentation "Creates a new table with the given implementation containing a single entry.")
-  (:method (implementation key value &rest initargs)
-    (error "Unrecognized table implementation.")))
 
 (defgeneric fold-table (function initial-value table)
   (:documentation "Folds the table with the given function and initial value.")
@@ -111,6 +101,7 @@
     (declare (ignore key default))
     (error "Not a table: ~S" table))
   (:method ((table table) key &optional default)
+    (declare (ignore key default))
     (error "Not implemented by table subclass.")))
 
 (defgeneric table/maximum (table)
@@ -193,7 +184,7 @@
     (let ((default (cons nil nil)))
       (every (lambda (key)
                (funcall test
-                        (table/lookup sub key)
+                        (table/lookup sub key default)
                         (table/lookup super key default)))
              (table/keys sub)))))
 
@@ -218,6 +209,11 @@
 
 (defclass hash-table (table)
   ())
+
+(defmethod shared-initialize :after ((instance hash-table) slot-names &rest initargs &key &allow-other-keys)
+  (when (or (eq slot-names 't) (member :representation slot-names))
+    (unless (getf initargs :representation)
+      (setf (representation instance) (apply #'make-hash-table initargs)))))
 
 (defclass plist-table (table)
   ())

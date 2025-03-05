@@ -140,21 +140,21 @@
 
 ;;;
 (defun sample-table (representation)
-  (let ((table (make-table representation)))
+  (let ((table (make-instance representation)))
     (dotimes (i 10 table)
       (table/insert! table i (format nil "~r" i)))))
 
 (defun table/test-table (representation)
-  (dolist (representation2 '(alist plist hash-table wttree))
-    (let ((table1 (make-table representation))
-          (table2 (make-table representation2)))
+  (dolist (representation2 '(alist-table plist-table hash-table wttree-table))
+    (let ((table1 (make-instance representation))
+          (table2 (make-instance representation2)))
       (dotimes (i 10)
         (table/insert! table1 i (format nil "~r" i))
         (table/insert! table2 i (format nil "~r" i)))
       (assert (table/equal? table1 table2 #'string=))))
 
-  (let ((mtable (make-table representation)))
-    (do ((itable (make-table representation) (table/insert itable i (format nil "~r" i)))
+  (let ((mtable (make-instance representation)))
+    (do ((itable (make-instance representation) (table/insert itable i (format nil "~r" i)))
          (i 0 (1+ i)))
         ((> i 10)
          (table/remove! mtable 5)
@@ -182,5 +182,5 @@
       (table/insert! mtable i (format nil "~r" i)))))
 
 (defun table/test-all ()
-  (dolist (representation '(alist hash-table plist wttree))
+  (dolist (representation '(alist-table hash-table plist-table wttree-table))
     (table/test-table representation)))
