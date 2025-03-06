@@ -38,8 +38,7 @@
 (defmethod table/delete-keys ((table alist-table) keys)
   (setf (representation table)
         (fold-left (lambda (alist key)
-                     (delete key alist :test (test table) :key #'car)
-                     alist)
+                     (delete key alist :test (test table) :key #'car))
                    (representation table)
                    keys)))
 

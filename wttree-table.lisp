@@ -16,7 +16,9 @@
                                :test (test table)))
 
 (defmethod fold-table (procedure initial (table wttree-table))
-  (node/inorder-fold procedure initial (representation table)))
+  (node/inorder-fold (lambda (accum node)
+                       (funcall procedure accum (node/k node) (node/v node)))
+                     initial (representation table)))
 
 (defmethod table/clear ((table wttree-table))
   (make-instance 'wttree-table :metadata (copy-list (metadata table)) :representation nil :test (test table)))

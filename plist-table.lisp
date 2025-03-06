@@ -38,12 +38,11 @@
 
 (defmethod table/delete ((table plist-table) key &rest keys)
   (setf (representation table) (delete-from-plist (representation table) key))
-  (when keys
-    (table/delete-keys table keys)))
+  (setf (representation table) (table/delete-keys table keys)))
 
 (defmethod table/delete-keys ((table plist-table) key-list)
-  (dolist (key key-list)
-    (setf (representation table) (delete-from-plist (representation table) key))))
+  (setf (representation table)
+        (fold-left #'delete-from-plist (representation table) key-list)))
 
 (defmethod table/insert ((table plist-table) key value)
   (make-instance 'plist-table

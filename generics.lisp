@@ -109,6 +109,36 @@
     (declare (ignore key keys))
     (error "Not implemented by table subclass.")))
 
+(defgeneric table/delete-if (table predicate)
+  (:documentation "Destructive removal of entries from a table.  Returns the old table after it is modified.")
+  (:method ((table t) predicate)
+    (declare (ignore predicate))
+    (error "Not a table: ~S" table))
+  (:method ((table table) predicate)
+    (table/delete-keys
+     table
+     (fold-table (lambda (keys key value)
+                   (if (funcall predicate key value)
+                       (cons key keys)
+                       keys))
+                 nil
+                 table))))
+
+(defgeneric table/delete-if-not (table predicate)
+  (:documentation "Destructive removal of entries from a table.  Returns the old table after it is modified.")
+  (:method ((table t) predicate)
+    (declare (ignore predicate))
+    (error "Not a table: ~S" table))
+  (:method ((table table) predicate)
+    (table/delete-keys
+     table
+     (fold-table (lambda (keys key value)
+                   (if (funcall predicate key value)
+                       keys
+                       (cons key keys)))
+                 nil
+                 table))))
+
 (defgeneric table/delete-keys (table key-list)
   (:documentation "Destructive removal of a set of entries from a table.  Returns the old table after it is modified.")
   (:method ((table t) key-list)
