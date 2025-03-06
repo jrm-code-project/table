@@ -13,6 +13,7 @@
   :version "0.5.0"
   :depends-on ("alexandria" "closer-mop" "named-let" "series" "str")
   :components ((:file "alist-table"  :depends-on ("generics" "package"))
+               (:file "base"         :depends-on ("package"))
                (:file "compare"      :depends-on ("package"))
                (:file "generics"     :depends-on ("package"))
                (:file "hash-table"   :depends-on ("generics" "package"))
@@ -27,6 +28,15 @@
                                                   "node"
                                                   "package"
                                                   "plist-table"
+                                                  "wttree-table"))
+               (:file "test"         :depends-on ("alist-table"
+                                                  "compare"
+                                                  "generics"
+                                                  "hash-table"
+                                                  "node"
+                                                  "package"
+                                                  "plist-table"
+                                                  "table"
                                                   "wttree-table"))
                (:file "wttree-table" :depends-on ("compare"
                                                   "generics"

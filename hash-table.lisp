@@ -12,11 +12,6 @@
   (declare (optimizable-series-function 2))
   (scan-hash (representation hash-table)))
 
-(defmethod table/copy ((table hash-table))
-  (make-instance 'hash-table
-                 :representation (copy-hash-table (representation table))
-                 :metadata (copy-list (metadata table))))
-
 (defmethod fold-table (procedure base (table hash-table))
   (multiple-value-bind (keys values) (scan-hash (representation table))
     (collect-last
@@ -39,8 +34,14 @@
                  :representation (copy-hash-table (representation table))
                  :metadata (copy-list (metadata table))))
 
-(defmethod table/delete ((table hash-table) key)
-  (remhash key (representation table)))
+(defmethod table/delete ((table hash-table) key &rest keys)
+  (remhash key (representation table))
+  (dolist (key keys)
+    (remhash key (representation table))))
+
+(defmethod table/delete-keys ((table hash-table) key-list)
+  (dolist (key key-list)
+    (remhash key (representation table))))
 
 (defmethod table/insert ((table hash-table) key value)
   (let ((copy (copy-hash-table (representation table))))
@@ -56,38 +57,37 @@
 (defmethod table/lookup ((table hash-table) key &optional default)
   (gethash key (representation table) default))
 
-(defmethod (setf table/lookup) (value (table hash-table) key)
-  (table/insert! table key value))
-
 (defmethod table/maximum ((table hash-table))
-  (unless (representation table)
+  (unless (and (representation table)
+               (not (zerop (representation table))))
     (error "Empty table."))
-  (let ((alist (hash-table-alist (representation table))))
-    (let iter ((min-key (caar alist))
-               (min-value (cdar alist))
-               (rest (cdr alist)))
-      (if (null rest)
-          (values min-key min-value)
-          (let ((key (caar rest))
-                (value (cdar rest)))
-            (if (greater key min-key)
-                (iter key value (cdr rest))
-                (iter min-key min-value (cdr rest))))))))
+  (with-hash-table-iterator (next (representation table))
+    (let iter ((max-key nil)
+               (max-val nil)
+               (first   t))
+      (multiple-value-bind (emptyp key value) (next)
+        (if emptyp
+            (values max-key max-val)
+            (if (or first
+                    (greater key max-key))
+                (iter key value nil)
+                (iter max-key max-val nil)))))))
 
 (defmethod table/minimum ((table hash-table))
-  (unless (representation table)
+  (unless (and (representation table)
+               (not (zerop (representation table))))
     (error "Empty table."))
-  (let ((alist (hash-table-alist (representation table))))
-    (let iter ((min-key (caar alist))
-               (min-value (cdar alist))
-               (rest (cdr alist)))
-      (if (null rest)
-          (values min-key min-value)
-          (let ((key (caar rest))
-                (value (cdar rest)))
-            (if (less key min-key)
-                (iter key value (cdr rest))
-                (iter min-key min-value (cdr rest))))))))
+  (with-hash-table-iterator (next (representation table))
+    (let iter ((min-key nil)
+               (min-val nil)
+               (first   t))
+      (multiple-value-bind (emptyp key value) (next)
+        (if emptyp
+            (values min-key min-val)
+            (if (or first
+                    (less key min-key))
+                (iter key value nil)
+                (iter min-key min-val nil)))))))
 
 (defmethod table/pop-maximum ((table hash-table))
   (unless (representation table)

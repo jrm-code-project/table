@@ -14,11 +14,6 @@
   (declare (optimizable-series-function 2))
   (scan-plist (representation plist-table)))
 
-(defmethod table/copy ((table plist-table))
-  (make-instance 'plist-table
-                 :representation (copy-list (representation table))
-                 :metadata (copy-list (metadata table))))
-
 (defmethod fold-table (procedure base (table plist-table))
   (multiple-value-bind (keys values) (scan-plist (representation table))
     (collect-last
@@ -36,8 +31,19 @@
 (defmethod table/clear! ((table plist-table))
   (setf (representation table) '()))
 
-(defmethod table/delete ((table plist-table) key)
-  (setf (representation table) (delete-from-plist (representation table) key)))
+(defmethod table/copy ((table plist-table))
+  (make-instance 'plist-table
+                 :representation (copy-list (representation table))
+                 :metadata (copy-list (metadata table))))
+
+(defmethod table/delete ((table plist-table) key &rest keys)
+  (setf (representation table) (delete-from-plist (representation table) key))
+  (when keys
+    (table/delete-keys table keys)))
+
+(defmethod table/delete-keys ((table plist-table) key-list)
+  (dolist (key key-list)
+    (setf (representation table) (delete-from-plist (representation table) key))))
 
 (defmethod table/insert ((table plist-table) key value)
   (make-instance 'plist-table
@@ -54,9 +60,7 @@
         (setf (getf (representation table) key) value))))
 
 (defmethod table/keys ((table plist-table))
-  (do ((keys '() (cons (car plist) keys))
-       (plist (representation table) (cddr plist)))
-      ((null plist) keys)))
+  (plist-keys (representation table)))
 
 (defmethod table/lookup ((table plist-table) key &optional default)
   (getf (representation table) key default))
@@ -184,6 +188,4 @@
   'eql)
 
 (defmethod table/values ((table plist-table))
-  (do ((vals '() (cons (cadr plist) vals))
-       (plist (representation table) (cddr plist)))
-      ((null plist) vals)))
+  (plist-values (representation table)))

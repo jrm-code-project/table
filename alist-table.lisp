@@ -12,17 +12,8 @@
   (declare (optimizable-series-function 2))
   (scan-alist (representation alist-table)))
 
-(defmethod table/copy ((table alist-table))
-  (make-instance 'alist-table
-                 :representation (mapcar (lambda (entry) (cons (car entry) (cdr entry)))
-                                         (representation table))
-                 :metadata (copy-list (metadata table))
-                 :test (test table)))
-
 (defmethod fold-table (procedure base (table alist-table))
-  (fold-left (lambda (base entry) (funcall procedure base (car entry) (cdr entry)))
-             base
-             (representation table)))
+  (alist-fold-left procedure base table))
 
 (defmethod table/clear ((table alist-table))
   (make-instance 'alist-table :representation '() :metadata (copy-list (metadata table)) :test (test table)))
@@ -33,12 +24,24 @@
 (defmethod table/copy ((table alist-table))
   (make-instance 'alist-table
                  :metadata (copy-list (metadata table))
-                 :representation (mapcar (lambda (entry) (cons (car entry) (cdr entry)))
-                                         (representation table))
+                 :representation (copy-alist (representation table))
                  :test (test table)))
 
-(defmethod table/delete ((table alist-table) key)
-  (setf (representation table) (delete key (representation table) :test (test table) :key #'car)))
+(defmethod table/delete ((table alist-table) key &rest keys)
+  (setf (representation table)
+        (fold-left (lambda (alist key)
+                     (delete key alist :test (test table) :key #'car)
+                     alist)
+                   (representation table)
+                   (cons key keys))))
+
+(defmethod table/delete-keys ((table alist-table) keys)
+  (setf (representation table)
+        (fold-left (lambda (alist key)
+                     (delete key alist :test (test table) :key #'car)
+                     alist)
+                   (representation table)
+                   keys)))
 
 (defmethod table/insert ((table alist-table) key value)
   (make-instance 'alist-table
@@ -54,7 +57,7 @@
     value))
 
 (defmethod table/keys ((table alist-table))
-  (mapcar #'car (representation table)))
+  (alist-keys (representation table)))
 
 (defmethod table/lookup ((table alist-table) key &optional default)
   (let ((entry (assoc key (representation table) :test (test table))))
@@ -182,10 +185,10 @@
                    :test (test table))))
 
 (defmethod table/test ((table alist-table))
-  (cond ((eql (test table) #'eql) 'eql)
-        ((eql (test table) #'equal) 'equal)
-        ((eql (test table) #'equalp) 'equalp)
+  (cond ((member (test table) (list #'eql 'eql))       'eql)
+        ((member (test table) (list #'equal 'equal))   'equal)
+        ((member (test table) (list #'equalp 'equalp)) 'equalp)
         (t (error "Unknown test function: ~s" (test table)))))
 
 (defmethod table/values ((table alist-table))
-  (mapcar #'cdr (representation  table)))
+  (alist-values (representation  table)))

@@ -29,8 +29,19 @@
                                :representation (node/copy (representation table))
                                :test (test table)))
 
-(defmethod table/delete ((table wttree-table) key)
-  (setf (representation table) (node/remove (test table) (representation table) key)))
+(defmethod table/delete ((table wttree-table) key &rest keys)
+  (setf (representation table)
+        (fold-left (lambda (node key)
+                     (node/remove (test table) node key))
+                   (representation table)
+                   (cons key keys))))
+
+(defmethod table/delete-keys ((table wttree-table) key-list)
+  (setf (representation table)
+        (fold-left (lambda (node key)
+                     (node/remove (test table) node key))
+                   (representation table)
+                   key-list)))
 
 (defmethod table/insert ((table wttree-table) key value)
   (make-instance 'wttree-table
