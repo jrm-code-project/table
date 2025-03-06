@@ -116,5 +116,13 @@
 (defmethod table/union! ((left wttree-table) (right wttree-table))
   (setf (representation left) (node/union (test left) (representation left) (representation right))))
 
+(defmethod table/union-merge ((left wttree-table) (right wttree-table) merge)
+  (make-instance 'wttree-table
+                 :representation (node/union-merge (test left) (representation left) (representation right) merge)
+                 :test (test left)))
+
+(defmethod table/union-merge! ((left wttree-table) (right wttree-table) merge)
+  (setf (representation left) (node/union-merge (test left) (representation left) (representation right) merge)))
+
 (defmethod table/values ((table wttree-table))
   (node/values (representation table)))

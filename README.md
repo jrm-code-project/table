@@ -48,14 +48,14 @@ Returns a list of the values in _table_.  List structure may be shared, so do no
 `table/size` _table_\
 Returns the number of entries in _table_.
 
-`table/split-gt` _table_ _pivot_\
-Returns a new table with only those entries greater than _pivot_.
-
-`table/split-lt` _table_ _pivot_\
-Returns a new table with only those entries less than _pivot_.
-
 `table/test` _table_\
 Returns the predicate used to compare keys in _table_.
+
+### Iterator
+
+`do-table` (_key_ _value_ _table_ `&optional` (_retval_ `nil`)) `&body` _body_\
+Iterate over _key_, _value_ pairs in _table_ running _body_ on each pair.  Return _retval_ when done.
+
 
 ### Destructive operations
 
@@ -79,6 +79,9 @@ Returns two values, the least key and its associated value.  The entry associate
 
 `table/union!` _left_ _right_\
 Adds to _left_ those entries in _right_ that do not already appear in _left_.
+
+`table/union-merge!` _left_ _right_ _merge-fn_\
+Adds to _left_ the entries in _right_.  If an entry appears in _both_, _merge-fn_ is called to merge the values.
 
 ### Non-destructive operations
 
@@ -112,10 +115,19 @@ Returns three values, the largest key in _table_, its associated value, and _tab
 Returns three values, the smallest key in _table_, its associated value, and _table_ without an entry for that _key_.  New table may share storage with original _table_.  Original _table_ is not modified.
 
 `table/remove` _table_ _key_\
-Returns the _table_ without an entry for _key_.  Original _table_ is not modified.  Returned _table_ may share storage with original _table_.
+Returns a new _table_ without an entry for _key_.  Original _table_ is not modified.  Returned _table_ may share storage with original _table_.
+
+`table/split-gt` _table_ _pivot_\
+Returns a new table with only those entries greater than _pivot_.
+
+`table/split-lt` _table_ _pivot_\
+Returns a new table with only those entries less than _pivot_.
 
 `table/union` _left_ _right_\
-Returns new table with all the entries in _left_ and any entries in _right_ that do not already appear in _left_.
+Returns a new table with all the entries in _left_ and any entries in _right_ that do not already appear in _left_.
+
+`table/union-merge` _left_ _right_ _merge-fn_\
+Returns a new table with all the entries in _left_ and all entries in _right_.  Entries in both are passed to _merge-fn_ to determine the value in the result.
 
 ### Conversions
 

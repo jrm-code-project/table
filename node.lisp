@@ -405,7 +405,7 @@
 	           (t
 	            (call-with-node right
                       (lambda (ak av l r)
-                        (let* ((node1  (node/find key<? ak left))
+                        (let* ((node1  (node/find key<? left ak))
 		               (l1     (node/split-lt key<? left ak))
 		               (r1     (node/split-gt key<? left ak))
 		               (value  (if node1

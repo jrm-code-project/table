@@ -51,7 +51,7 @@
         (progn
           (setf (representation table) (list* key value (representation table)))
           value)
-        (setf (cadr probe) value))))
+        (setf (getf (representation table) key) value))))
 
 (defmethod table/keys ((table plist-table))
   (do ((keys '() (cons (car plist) keys))
