@@ -22,10 +22,15 @@
   (make-instance 'wttree-table :metadata (copy-list (metadata table)) :representation nil :test (test table)))
 
 (defmethod table/clear! ((table wttree-table))
-  (setf (rep table) nil))
+  (setf (representation table) nil))
+
+(defmethod table/copy ((table wttree-table))
+  (make-instance 'wttree-table :metadata (copy-list (metadata table))
+                               :representation (node/copy (representation table))
+                               :test (test table)))
 
 (defmethod table/delete ((table wttree-table) key)
-  (setf (rep table) (node/remove (test table) (representation table) key)))
+  (setf (representation table) (node/remove (test table) (representation table) key)))
 
 (defmethod table/insert ((table wttree-table) key value)
   (make-instance 'wttree-table
@@ -102,6 +107,14 @@
 
 (defmethod table/test ((table wttree-table))
   (test table))
+
+(defmethod table/union ((left wttree-table) (right wttree-table))
+  (make-instance 'wttree-table
+                 :representation (node/union (test left) (representation left) (representation right))
+                 :test (test left)))
+
+(defmethod table/union! ((left wttree-table) (right wttree-table))
+  (setf (representation left) (node/union (test left) (representation left) (representation right))))
 
 (defmethod table/values ((table wttree-table))
   (node/values (representation table)))

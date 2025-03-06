@@ -34,6 +34,11 @@
 (defmethod table/clear! ((table hash-table))
   (clrhash (representation table)))
 
+(defmethod table/copy ((table hash-table))
+  (make-instance 'hash-table
+                 :representation (copy-hash-table (representation table))
+                 :metadata (copy-list (metadata table))))
+
 (defmethod table/delete ((table hash-table) key)
   (remhash key (representation table)))
 

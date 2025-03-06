@@ -30,6 +30,13 @@
 (defmethod table/clear! ((table alist-table))
   (setf (representation table) '()))
 
+(defmethod table/copy ((table alist-table))
+  (make-instance 'alist-table
+                 :metadata (copy-list (metadata table))
+                 :representation (mapcar (lambda (entry) (cons (car entry) (cdr entry)))
+                                         (representation table))
+                 :test (test table)))
+
 (defmethod table/delete ((table alist-table) key)
   (setf (representation table) (delete key (representation table) :test (test table) :key #'car)))
 

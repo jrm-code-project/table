@@ -77,6 +77,9 @@ Returns two values, the greatest key and its associated value.  The entry associ
 `table/pop-minimum!` _table_\
 Returns two values, the least key and its associated value.  The entry associated with this key and value is deleted from the table.
 
+`table/union!` _left_ _right_\
+Adds to _left_ those entries in _right_ that do not already appear in _left_.
+
 ### Non-destructive operations
 
 These operations leave their arguments unmodified.  The results may share storage with the arguments.  These operations can be inefficient if they need to copy their arguments.
@@ -86,6 +89,9 @@ _procedure_ takes three arguments, the result of the previous fold step, a key, 
 
 `table/clear` _table_\
 Returns a table like the argument, but with no entries.
+
+`table/copy` _table_\
+Returns a copy of _table_ that shares no storage with _table_.  Destructive operations on the copy will not cause side effects on the original.  Table keys and values, however, are _not_ copied.
 
 `table/insert` _table_ _key_ _value_\
 Returns a new table with additional entry of _key_ associated with _value_.  Original _table_ is unmodified, but storage may be shared with original _table_.
@@ -107,6 +113,9 @@ Returns three values, the smallest key in _table_, its associated value, and _ta
 
 `table/remove` _table_ _key_\
 Returns the _table_ without an entry for _key_.  Original _table_ is not modified.  Returned _table_ may share storage with original _table_.
+
+`table/union` _left_ _right_\
+Returns new table with all the entries in _left_ and any entries in _right_ that do not already appear in _left_.
 
 ### Conversions
 

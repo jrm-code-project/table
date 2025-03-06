@@ -102,6 +102,13 @@
 (defun node/weight (node) (node/size node))
 (define-compiler-macro node/weight (node) `(node/size ,node))
 
+(defun node/copy (node)
+  (if (null node)
+      nil
+      (make-node (node/k node) (node/v node)
+                 (node/copy (node/l node)) (node/copy (node/r node))
+                 (node/w node))))
+
 (defun log2< (a b)
   (and (< a b) (< (ash (logand a b) 1) b)))
 
