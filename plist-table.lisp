@@ -171,7 +171,7 @@
 (defmethod table/split-lt ((table plist-table) pivot)
   (labels ((recur (rest)
              (cond ((null rest) '())
-                   ((greater (car rest) pivot)
+                   ((less (car rest) pivot)
                     (list* (car rest) (cadr rest) (recur (cddr rest))))
                    (t (recur (cddr rest))))))
     (make-instance 'plist-table

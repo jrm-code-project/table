@@ -168,10 +168,10 @@
 
 (defmethod table/split-lt ((table alist-table) pivot)
   (let ((predicate (if (member (test table) '(equalp #'equalp))
-                       (lambda (entry) (greaterp (car entry) pivot))
-                       (lambda (entry) (greater (car entry) pivot)))))
+                       (lambda (entry) (lessp (car entry) pivot))
+                       (lambda (entry) (less (car entry) pivot)))))
     (make-instance 'alist-table
-                   :representation (remove-if predicate (representation table))
+                   :representation (remove-if-not predicate (representation table))
                    :test (test table))))
 
 (defmethod table/test ((table alist-table))

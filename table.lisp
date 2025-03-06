@@ -55,7 +55,6 @@
           (collect-alist keys values))))
 
 (defmethod update-instance-for-different-class :after ((previous plist-table) (current hash-table) &rest initargs)
-  (declare (ignore initargs))
   (setf (representation current)
         (multiple-value-bind (keys values) (scan-plist (representation previous))
           (collect-hash keys values :test (getf initargs :test 'eql)))))
@@ -73,10 +72,9 @@
           (collect-alist keys values))))
 
 (defmethod update-instance-for-different-class :after ((previous wttree-table) (current hash-table) &rest initargs)
-  (declare (ignore initargs))
   (setf (representation current)
         (multiple-value-bind (keys values) (scan-node (representation previous))
-          (collect-hash keys values :test (or (getf :test initargs)
+          (collect-hash keys values :test (or (getf initargs :test)
                                               (if (member (test previous) (list #'lessp 'lessp))
                                                   'equalp
                                                   'equal))))))
@@ -159,9 +157,9 @@
     (dolist (rep2 '(alist-table plist-table hash-table wttree-table))
       (let* ((table1 (sample-table rep1))
              (table2 (sample-table rep2))
-             (table1* (table/split-gt table1 5))
-             (table2* (table/split-gt table2 5)))
-          (assert (table/equal? table1* table2*))))))
+             (table1* (table/split-lt table1 5))
+             (table2* (table/split-lt table2 5)))
+          (assert (table/equal? table1* table2* #'equal))))))
 
 (defun table/test-table (representation)
   (dolist (representation2 '(alist-table plist-table hash-table wttree-table))
