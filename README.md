@@ -48,6 +48,12 @@ Returns a list of the values in _table_.  List structure may be shared, so do no
 `table/size` _table_\
 Returns the number of entries in _table_.
 
+`table/split-gt` _table_ _pivot_\
+Returns a new table with only those entries greater than _pivot_.
+
+`table/split-lt` _table_ _pivot_\
+Returns a new table with only those entries less than _pivot_.
+
 `table/test` _table_\
 Returns the predicate used to compare keys in _table_.
 

@@ -86,6 +86,16 @@
 (defmethod table/size ((table wttree-table))
   (node/size (representation table)))
 
+(defmethod table/split-gt ((table wttree-table) pivot)
+  (make-instance 'wttree-table
+                 :representation (node/split-gt (test table) (representation table) pivot)
+                 :test (test table)))
+
+(defmethod table/split-lt ((table wttree-table) pivot)
+  (make-instance 'wttree-table
+                 :representation (node/split-lt (test table) (representation table) pivot)
+                 :test (test table)))
+
 (defmethod table/subset? ((sub wttree-table) (super wttree-table) &optional (test #'eql))
   (and (eq (test sub) (test super))
        (node/subset? (test sub) (representation sub) (representation super) test)))

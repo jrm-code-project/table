@@ -158,6 +158,22 @@
 (defmethod table/size ((table alist-table))
   (length (representation table)))
 
+(defmethod table/split-gt ((table alist-table) pivot)
+  (let ((predicate (if (member (test table) '(equalp #'equalp))
+                       (lambda (entry) (greaterp (car entry) pivot))
+                       (lambda (entry) (greaterp (car entry) pivot)))))
+    (make-instance 'alist-table
+                   :representation (remove-if-not predicate (representation table))
+                   :test (test table))))
+
+(defmethod table/split-lt ((table alist-table) pivot)
+  (let ((predicate (if (member (test table) '(equalp #'equalp))
+                       (lambda (entry) (greaterp (car entry) pivot))
+                       (lambda (entry) (greater (car entry) pivot)))))
+    (make-instance 'alist-table
+                   :representation (remove-if predicate (representation table))
+                   :test (test table))))
+
 (defmethod table/test ((table alist-table))
   (cond ((eql (test table) #'eql) 'eql)
         ((eql (test table) #'equal) 'equal)

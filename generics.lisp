@@ -169,6 +169,20 @@
   (:method ((table table))
     (error "Not implemented by table subclass.")))
 
+(defgeneric table/split-gt (table pivot)
+  (:documentation "Returns a table of the same type consisting of only those entries whose key is greater than pivot.")
+  (:method ((table t) pivot)
+    (error "Not a table: ~S" table))
+  (:method ((table table) pivot)
+    (error "Not implemented by table subclass.")))
+
+(defgeneric table/split-lt (table pivot)
+  (:documentation "Returns a table of the same type consisting of only those entries whose key is less than pivot.")
+  (:method ((table t) pivot)
+    (error "Not a table: ~S" table))
+  (:method ((table table) pivot)
+    (error "Not implemented by table subclass.")))
+
 (defgeneric table/subset? (sub super &optional test)
   (:documentation "T if every key in sub is in super.")
   (:method ((sub t) (super t) &optional test)

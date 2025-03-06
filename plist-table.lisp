@@ -159,6 +159,24 @@
 (defmethod table/remove! ((table plist-table) key)
   (setf (representation table) (delete-from-plist (representation table) key)))
 
+(defmethod table/split-gt ((table plist-table) pivot)
+  (labels ((recur (rest)
+             (cond ((null rest) '())
+                   ((greater (car rest) pivot)
+                    (list* (car rest) (cadr rest) (recur (cddr rest))))
+                   (t (recur (cddr rest))))))
+    (make-instance 'plist-table
+                   :representation (recur (representation table)))))
+
+(defmethod table/split-lt ((table plist-table) pivot)
+  (labels ((recur (rest)
+             (cond ((null rest) '())
+                   ((greater (car rest) pivot)
+                    (list* (car rest) (cadr rest) (recur (cddr rest))))
+                   (t (recur (cddr rest))))))
+    (make-instance 'plist-table
+                   :representation (recur (representation table)))))
+
 (defmethod table/size ((table plist-table))
   (floor (length (representation table)) 2))
 

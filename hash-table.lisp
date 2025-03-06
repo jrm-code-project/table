@@ -121,6 +121,36 @@
 (defmethod table/size ((table hash-table))
   (hash-table-count (representation table)))
 
+(defmethod table/split-gt ((table hash-table) pivot)
+  (let ((answer-table (make-hash-table :test (hash-table-test (representation table))))
+        (predicate    (if (eql (hash-table-test (representation table)) 'equalp)
+                          #'greaterp
+                          #'greater)))
+
+    (maphash (lambda (k v)
+               (when (funcall predicate k pivot)
+                 (setf (gethash k answer-table) v)))
+             (representation table))
+
+    (make-instance 'hash-table
+                   :representation answer-table
+                   :metadata '())))
+
+(defmethod table/split-lt ((table hash-table) pivot)
+  (let ((answer-table (make-hash-table :test (hash-table-test (representation table))))
+        (predicate    (if (eql (hash-table-test (representation table)) 'equalp)
+                          #'lessp
+                          #'less)))
+
+    (maphash (lambda (k v)
+               (when (funcall predicate k pivot)
+                 (setf (gethash k answer-table) v)))
+             (representation table))
+
+    (make-instance 'hash-table
+                   :representation answer-table
+                   :metadata '())))
+
 (defmethod table/test ((table hash-table))
   (hash-table-test (representation table)))
 
