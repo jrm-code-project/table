@@ -96,13 +96,13 @@
     (values (node/k node)
             (node/v node)
             (make-instance 'wttree-table
-                           :representation (node/remove-maximum (representation table))
+                           :representation (node/remove-minimum (representation table))
                            :test (test table)))))
 
 (defmethod table/pop-minimum! ((table wttree-table))
   (let ((node (node/minimum (representation table))))
-    (setf (representation table) (node/remove-maximum (representation table)))
-    (values (node/k node) (node/v node) table))
+    (setf (representation table) (node/remove-minimum (representation table)))
+    (values (node/k node) (node/v node) table)))
 
 (defmethod table/remove ((table wttree-table) &rest keys)
   (make-instance 'wttree-table
