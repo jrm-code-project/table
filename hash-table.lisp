@@ -24,7 +24,7 @@
 (defmethod table/clear ((table hash-table))
   (make-instance 'hash-table
                  :representation (make-hash-table :test (hash-table-test (representation table)))
-                 :metadata (copy-list (metadata table))))
+                 :metadata '()))
 
 (defmethod table/clear! ((table hash-table))
   (clrhash (representation table))
@@ -83,8 +83,6 @@
                (min-val nil)
                (first   t))
       (multiple-value-bind (entryp key value) (next)
-        (format t "~&entryp: ~a, key: ~a, value: ~a~%" entryp key value)
-        (force-output t)
         (if (not entryp)
             (values min-key min-val)
             (if (or first
@@ -102,8 +100,7 @@
   (unless (representation table)
     (error "Empty table."))
   (multiple-value-bind (max-key max-value) (table/maximum table)
-    (table/delete table max-key)
-    (values max-key max-value)))
+    (values max-key max-value (table/delete table max-key))))
 
 (defmethod table/pop-minimum ((table hash-table))
   (unless (representation table)
@@ -115,8 +112,7 @@
   (unless (representation table)
     (error "Empty table."))
   (multiple-value-bind (min-key min-value) (table/minimum table)
-    (table/delete table min-key)
-    (values min-key min-value)))
+    (values min-key min-value (table/delete table min-key))))
 
 (defmethod table/remove ((table hash-table) &rest keys)
   (let ((copy (copy-hash-table (representation table))))
@@ -124,7 +120,7 @@
     (make-instance 'hash-table :representation copy :metadata (copy-list (metadata table)))))
 
 (defmethod table/remove! ((table hash-table) &rest keys)
-  (dolist (key keys)
+  (dolist (key keys table)
     (remhash key (representation table))))
 
 (defmethod table/size ((table hash-table))

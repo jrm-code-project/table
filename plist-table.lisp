@@ -26,10 +26,11 @@
 (defmethod table/clear ((table plist-table))
   (make-instance 'plist-table
                  :representation '()
-                 :metadata (copy-list (metadata table))))
+                 :metadata '()))
 
 (defmethod table/clear! ((table plist-table))
-  (setf (representation table) '()))
+  (setf (representation table) '())
+  table)
 
 (defmethod table/copy ((table plist-table))
   (make-instance 'plist-table
@@ -41,7 +42,8 @@
 
 (defmethod table/delete-keys ((table plist-table) key-list)
   (setf (representation table)
-        (fold-left (lambda (plist key) (delete-from-plist plist key) plist) (representation table) key-list)))
+        (fold-left #'delete-from-plist (representation table) key-list))
+  table)
 
 (defmethod table/insert ((table plist-table) key value)
   (make-instance 'plist-table
@@ -111,9 +113,7 @@
              (max-value (cadr (representation table)))
              (rest (cddr (representation table))))
     (if (null rest)
-        (progn
-          (delete-from-plist (representation table) max-key)
-          (values max-key max-value))
+        (values max-key max-value (table/delete table max-key))
         (let ((key (caar rest))
               (value (cdar rest)))
           (if (greater key max-key)
@@ -141,9 +141,7 @@
              (min-value (cadr (representation table)))
              (rest      (cddr (representation table))))
     (if (null rest)
-        (progn
-          (delete-from-plist (representation table) min-key)
-          (values min-key min-value))
+        (values min-key min-value (table/delete table min-key))
         (let ((key (car rest))
               (value (cadr rest)))
           (if (less key min-key)
@@ -156,7 +154,8 @@
                  :metadata (copy-list (metadata table))))
 
 (defmethod table/remove! ((table plist-table) &rest keys)
-  (fold-left (lambda (plist key) (delete-from-plist plist key) plist) (representation table) keys))
+  (setf (representation table) (fold-left #'delete-from-plist (representation table) keys))
+  table)
 
 (defmethod table/split-gt ((table plist-table) pivot)
   (labels ((recur (rest)

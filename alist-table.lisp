@@ -16,7 +16,7 @@
   (alist-fold-left procedure base (representation table)))
 
 (defmethod table/clear ((table alist-table))
-  (make-instance 'alist-table :representation '() :metadata (copy-list (metadata table)) :test (test table)))
+  (make-instance 'alist-table :representation '() :metadata '() :test (test table)))
 
 (defmethod table/clear! ((table alist-table))
   (setf (representation table) '()))
@@ -29,18 +29,16 @@
 
 (defmethod table/delete ((table alist-table) &rest keys)
   (setf (representation table)
-        (fold-left (lambda (alist key)
-                     (delete key alist :test (test table) :key #'car))
-                   (representation table)
-                   keys))
+        (delete-if (lambda (entry)
+                     (member (car entry) keys :test (test table)))
+                   (representation table)))
   table)
 
 (defmethod table/delete-keys ((table alist-table) keys)
   (setf (representation table)
-        (fold-left (lambda (alist key)
-                     (delete key alist :test (test table) :key #'car))
-                   (representation table)
-                   keys))
+        (delete-if (lambda (entry)
+                     (member (car entry) keys :test (test table)))
+                   (representation table)))
   table)
 
 (defmethod table/insert ((table alist-table) key value)
@@ -62,9 +60,6 @@
 (defmethod table/lookup ((table alist-table) key &optional default)
   (let ((entry (assoc key (representation table) :test (test table))))
     (if entry (cdr entry) default)))
-
-(defmethod (setf table/lookup) (value (table alist-table) key)
-  (table/insert! table key value))
 
 (defmethod table/maximum ((table alist-table))
   (unless (representation table)
@@ -159,17 +154,16 @@
 (defmethod table/remove ((table alist-table) &rest keys)
   (make-instance 'alist-table
                  :metadata (copy-list (metadata table))
-                 :representation (fold-left (lambda (answer key)
-                                              (remove key answer :test (test table) :key #'car))
-                                            (representation table)
-                                            keys)
+                 :representation (remove-if (lambda (entry)
+                                              (member (car entry) keys :test (test table)))
+                                            (representation table))
                  :test (test table)))
 
 (defmethod table/remove! ((table alist-table) &rest keys)
-  (setf (representation table) (fold-left (lambda (answer key)
-                                            (delete key answer :test (test table) :key #'car))
-                                          (representation table)
-                                          keys)))
+  (setf (representation table) (remove-if (lambda (entry)
+                                            (member (car entry) keys :test (test table)))
+                                          (representation table)))
+  table)
 
 (defmethod table/size ((table alist-table))
   (length (representation table)))
@@ -177,7 +171,7 @@
 (defmethod table/split-gt ((table alist-table) pivot)
   (let ((predicate (if (member (test table) '(equalp #'equalp))
                        (lambda (entry) (greaterp (car entry) pivot))
-                       (lambda (entry) (greaterp (car entry) pivot)))))
+                       (lambda (entry) (greater (car entry) pivot)))))
     (make-instance 'alist-table
                    :representation (remove-if-not predicate (representation table))
                    :test (test table))))
@@ -197,4 +191,4 @@
         (t (error "Unknown test function: ~s" (test table)))))
 
 (defmethod table/values ((table alist-table))
-  (mapcar #'cdr (representation  table)))
+  (alist-values (representation  table)))
