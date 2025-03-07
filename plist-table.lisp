@@ -36,13 +36,12 @@
                  :representation (copy-list (representation table))
                  :metadata (copy-list (metadata table))))
 
-(defmethod table/delete ((table plist-table) key &rest keys)
-  (setf (representation table) (delete-from-plist (representation table) key))
-  (setf (representation table) (table/delete-keys table keys)))
+(defmethod table/delete ((table plist-table) &rest keys)
+  (table/delete-keys table keys))
 
 (defmethod table/delete-keys ((table plist-table) key-list)
   (setf (representation table)
-        (fold-left #'delete-from-plist (representation table) key-list)))
+        (fold-left (lambda (plist key) (delete-from-plist plist key) plist) (representation table) key-list)))
 
 (defmethod table/insert ((table plist-table) key value)
   (make-instance 'plist-table
@@ -53,10 +52,9 @@
   (let* ((not-found (cons nil nil))
          (probe (getf (representation table) key not-found)))
     (if (eq probe not-found)
-        (progn
-          (setf (representation table) (list* key value (representation table)))
-          value)
-        (setf (getf (representation table) key) value))))
+        (setf (representation table) (list* key value (representation table)))
+        (setf (getf (representation table) key) value))
+    table))
 
 (defmethod table/keys ((table plist-table))
   (plist-keys (representation table)))
@@ -114,8 +112,7 @@
              (rest (cddr (representation table))))
     (if (null rest)
         (progn
-          (setf (representation table)
-                (delete-from-plist (representation table) max-key))
+          (delete-from-plist (representation table) max-key)
           (values max-key max-value))
         (let ((key (caar rest))
               (value (cdar rest)))
@@ -145,8 +142,7 @@
              (rest      (cddr (representation table))))
     (if (null rest)
         (progn
-          (setf (representation table)
-                (delete-from-plist (representation table) min-key))
+          (delete-from-plist (representation table) min-key)
           (values min-key min-value))
         (let ((key (car rest))
               (value (cadr rest)))
@@ -154,13 +150,13 @@
               (iter key value (cddr rest))
               (iter min-key min-value (cddr rest)))))))
 
-(defmethod table/remove ((table plist-table) key)
+(defmethod table/remove ((table plist-table) &rest keys)
   (make-instance 'plist-table
-                 :representation (remove-from-plist (representation table) key)
+                 :representation (fold-left #'remove-from-plist (representation table) keys)
                  :metadata (copy-list (metadata table))))
 
-(defmethod table/remove! ((table plist-table) key)
-  (setf (representation table) (delete-from-plist (representation table) key)))
+(defmethod table/remove! ((table plist-table) &rest keys)
+  (fold-left (lambda (plist key) (delete-from-plist plist key) plist) (representation table) keys))
 
 (defmethod table/split-gt ((table plist-table) pivot)
   (labels ((recur (rest)

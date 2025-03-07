@@ -29,7 +29,7 @@
                                                   "package"
                                                   "plist-table"
                                                   "wttree-table"))
-               (:file "test"         :depends-on ("alist-table"
+               (:file "tests"        :depends-on ("alist-table"
                                                   "compare"
                                                   "generics"
                                                   "hash-table"

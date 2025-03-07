@@ -23,24 +23,24 @@
 
 (defmethod table/clear ((table hash-table))
   (make-instance 'hash-table
-                 :representation (make-hash-table :test (hash-table-test table))
+                 :representation (make-hash-table :test (hash-table-test (representation table)))
                  :metadata (copy-list (metadata table))))
 
 (defmethod table/clear! ((table hash-table))
-  (clrhash (representation table)))
+  (clrhash (representation table))
+  table)
 
 (defmethod table/copy ((table hash-table))
   (make-instance 'hash-table
                  :representation (copy-hash-table (representation table))
                  :metadata (copy-list (metadata table))))
 
-(defmethod table/delete ((table hash-table) key &rest keys)
-  (remhash key (representation table))
-  (dolist (key keys)
+(defmethod table/delete ((table hash-table) &rest keys)
+  (dolist (key keys table)
     (remhash key (representation table))))
 
 (defmethod table/delete-keys ((table hash-table) key-list)
-  (dolist (key key-list)
+  (dolist (key key-list table)
     (remhash key (representation table))))
 
 (defmethod table/insert ((table hash-table) key value)
@@ -49,7 +49,8 @@
     (make-instance 'hash-table :representation copy :metadata (copy-list (metadata table)))))
 
 (defmethod table/insert! ((table hash-table) key value)
-  (setf (gethash key (representation table)) value))
+  (setf (gethash key (representation table)) value)
+  table)
 
 (defmethod table/keys ((table hash-table))
   (hash-table-keys (representation table)))
@@ -59,14 +60,14 @@
 
 (defmethod table/maximum ((table hash-table))
   (unless (and (representation table)
-               (not (zerop (representation table))))
+               (not (zerop (hash-table-count (representation table)))))
     (error "Empty table."))
   (with-hash-table-iterator (next (representation table))
     (let iter ((max-key nil)
                (max-val nil)
                (first   t))
-      (multiple-value-bind (emptyp key value) (next)
-        (if emptyp
+      (multiple-value-bind (entryp key value) (next)
+        (if (not entryp)
             (values max-key max-val)
             (if (or first
                     (greater key max-key))
@@ -75,14 +76,16 @@
 
 (defmethod table/minimum ((table hash-table))
   (unless (and (representation table)
-               (not (zerop (representation table))))
+               (not (zerop (hash-table-count (representation table)))))
     (error "Empty table."))
   (with-hash-table-iterator (next (representation table))
     (let iter ((min-key nil)
                (min-val nil)
                (first   t))
-      (multiple-value-bind (emptyp key value) (next)
-        (if emptyp
+      (multiple-value-bind (entryp key value) (next)
+        (format t "~&entryp: ~a, key: ~a, value: ~a~%" entryp key value)
+        (force-output t)
+        (if (not entryp)
             (values min-key min-val)
             (if (or first
                     (less key min-key))
@@ -115,13 +118,14 @@
     (table/delete table min-key)
     (values min-key min-value)))
 
-(defmethod table/remove ((table hash-table) key)
+(defmethod table/remove ((table hash-table) &rest keys)
   (let ((copy (copy-hash-table (representation table))))
-    (remhash key copy)
+    (dolist (key keys) (remhash key copy))
     (make-instance 'hash-table :representation copy :metadata (copy-list (metadata table)))))
 
-(defmethod table/remove! ((table hash-table) key)
-  (remhash key (representation table)))
+(defmethod table/remove! ((table hash-table) &rest keys)
+  (dolist (key keys)
+    (remhash key (representation table))))
 
 (defmethod table/size ((table hash-table))
   (hash-table-count (representation table)))
