@@ -249,6 +249,24 @@
                             (n-join key v   l r))))))))
     (recur key<? node k v)))
 
+(defun alist->node (alist)
+  (alist-fold-left (lambda (node key value)
+                     (node/add #'less node key value))
+                   nil
+                   alist))
+
+(defun hash-table->node (hash-table)
+  (hash-table-fold-left (lambda (node key value)
+                          (node/add #'less node key value))
+                        nil
+                        hash-table))
+
+(defun plist->node (plist)
+  (plist-fold-left (lambda (node key value)
+                     (node/add #'less node key value))
+                   nil
+                   plist))
+
 (defun node/remove (key<? node k)
   (check-type key<? function)
   (labels ((recur (key<? node k)

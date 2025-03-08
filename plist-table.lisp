@@ -10,6 +10,15 @@
   (make-instance 'plist-table
                  :representation (collect-plist key-series value-series)))
 
+(defun collect-immutable-plist (key-series value-series)
+  (declare (optimizable-series-function))
+  (make-instance 'immutable-plist
+                 :representation (collect-plist key-series value-series)))
+
+(defun scan-immutable-plist (plist-table)
+  (declare (optimizable-series-function 2))
+  (scan-plist (representation plist-table)))
+
 (defun scan-plist-table (plist-table)
   (declare (optimizable-series-function 2))
   (scan-plist (representation plist-table)))
@@ -24,7 +33,7 @@
                        values))))
 
 (defmethod table/clear ((table plist-table))
-  (make-instance 'plist-table
+  (make-instance (class-of table)
                  :representation '()
                  :metadata '()))
 
@@ -33,7 +42,7 @@
   table)
 
 (defmethod table/copy ((table plist-table))
-  (make-instance 'plist-table
+  (make-instance (class-of table)
                  :representation (copy-list (representation table))
                  :metadata (copy-list (metadata table))))
 
@@ -46,7 +55,7 @@
   table)
 
 (defmethod table/insert ((table plist-table) key value)
-  (make-instance 'plist-table
+  (make-instance (class-of table)
                  :representation (list* key value (remove-from-plist (representation table) key))
                  :metadata (copy-list (metadata table))))
 
@@ -149,7 +158,7 @@
               (iter min-key min-value (cddr rest)))))))
 
 (defmethod table/remove ((table plist-table) &rest keys)
-  (make-instance 'plist-table
+  (make-instance (class-of table)
                  :representation (fold-left #'remove-from-plist (representation table) keys)
                  :metadata (copy-list (metadata table))))
 
@@ -163,7 +172,7 @@
                    ((greater (car rest) pivot)
                     (list* (car rest) (cadr rest) (recur (cddr rest))))
                    (t (recur (cddr rest))))))
-    (make-instance 'plist-table
+    (make-instance (class-of table)
                    :representation (recur (representation table)))))
 
 (defmethod table/split-lt ((table plist-table) pivot)
@@ -172,7 +181,7 @@
                    ((less (car rest) pivot)
                     (list* (car rest) (cadr rest) (recur (cddr rest))))
                    (t (recur (cddr rest))))))
-    (make-instance 'plist-table
+    (make-instance (class-of table)
                    :representation (recur (representation table)))))
 
 (defmethod table/size ((table plist-table))

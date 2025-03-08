@@ -8,7 +8,15 @@
   (declare (optimizable-series-function))
   (make-instance 'alist-table :representation (collect-alist key-series value-series)))
 
+(defun collect-immutable-alist (key-series value-series)
+  (declare (optimizable-series-function))
+  (make-instance 'immutable-alist :representation (collect-alist key-series value-series)))
+
 (defun scan-alist-table (alist-table)
+  (declare (optimizable-series-function 2))
+  (scan-alist (representation alist-table)))
+
+(defun scan-immutable-alist (alist-table)
   (declare (optimizable-series-function 2))
   (scan-alist (representation alist-table)))
 
@@ -16,13 +24,13 @@
   (alist-fold-left procedure base (representation table)))
 
 (defmethod table/clear ((table alist-table))
-  (make-instance 'alist-table :representation '() :metadata '() :test (test table)))
+  (make-instance (class-of table) :representation '() :metadata '() :test (test table)))
 
 (defmethod table/clear! ((table alist-table))
   (setf (representation table) '()))
 
 (defmethod table/copy ((table alist-table))
-  (make-instance 'alist-table
+  (make-instance (class-of table)
                  :metadata (copy-list (metadata table))
                  :representation (copy-alist (representation table))
                  :test (test table)))
@@ -42,7 +50,7 @@
   table)
 
 (defmethod table/insert ((table alist-table) key value)
-  (make-instance 'alist-table
+  (make-instance (class-of table)
                  :metadata (copy-list (metadata table))
                  :representation (acons key value (remove key (representation table) :test (test table) :key #'car))
                  :test (test table)))
@@ -152,7 +160,7 @@
               (iter min-key min-value (cdr rest)))))))
 
 (defmethod table/remove ((table alist-table) &rest keys)
-  (make-instance 'alist-table
+  (make-instance (class-of table)
                  :metadata (copy-list (metadata table))
                  :representation (remove-if (lambda (entry)
                                               (member (car entry) keys :test (test table)))
@@ -172,7 +180,7 @@
   (let ((predicate (if (member (test table) '(equalp #'equalp))
                        (lambda (entry) (greaterp (car entry) pivot))
                        (lambda (entry) (greater (car entry) pivot)))))
-    (make-instance 'alist-table
+    (make-instance (class-of table)
                    :representation (remove-if-not predicate (representation table))
                    :test (test table))))
 
@@ -180,7 +188,7 @@
   (let ((predicate (if (member (test table) '(equalp #'equalp))
                        (lambda (entry) (lessp (car entry) pivot))
                        (lambda (entry) (less (car entry) pivot)))))
-    (make-instance 'alist-table
+    (make-instance (class-of table)
                    :representation (remove-if-not predicate (representation table))
                    :test (test table))))
 

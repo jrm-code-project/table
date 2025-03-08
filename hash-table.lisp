@@ -8,6 +8,14 @@
   (declare (optimizable-series-function))
   (make-instance 'hash-table :representation (collect-hash key-series value-series)))
 
+(defun collect-immutable-hash-table (key-series value-series)
+  (declare (optimizable-series-function))
+  (make-instance 'immutable-hash-table :representation (collect-hash key-series value-series)))
+
+(defun scan-immutable-hash-table (hash-table)
+  (declare (optimizable-series-function 2))
+  (scan-hash (representation hash-table)))
+
 (defun scan-hash-table (hash-table)
   (declare (optimizable-series-function 2))
   (scan-hash (representation hash-table)))
@@ -22,7 +30,7 @@
                        values))))
 
 (defmethod table/clear ((table hash-table))
-  (make-instance 'hash-table
+  (make-instance (class-of table)
                  :representation (make-hash-table :test (hash-table-test (representation table)))
                  :metadata '()))
 
@@ -31,7 +39,7 @@
   table)
 
 (defmethod table/copy ((table hash-table))
-  (make-instance 'hash-table
+  (make-instance (class-of table)
                  :representation (copy-hash-table (representation table))
                  :metadata (copy-list (metadata table))))
 
@@ -46,9 +54,11 @@
 (defmethod table/insert ((table hash-table) key value)
   (let ((copy (copy-hash-table (representation table))))
     (setf (gethash key copy) value)
-    (make-instance 'hash-table :representation copy :metadata (copy-list (metadata table)))))
+    (make-instance (class-of table) :representation copy :metadata (copy-list (metadata table)))))
 
 (defmethod table/insert! ((table hash-table) key value)
+  (when (null (representation table))
+    (setf (representation table) (make-hash-table :test (test (representation table)))))
   (setf (gethash key (representation table)) value)
   table)
 
@@ -117,7 +127,7 @@
 (defmethod table/remove ((table hash-table) &rest keys)
   (let ((copy (copy-hash-table (representation table))))
     (dolist (key keys) (remhash key copy))
-    (make-instance 'hash-table :representation copy :metadata (copy-list (metadata table)))))
+    (make-instance (class-of table) :representation copy :metadata (copy-list (metadata table)))))
 
 (defmethod table/remove! ((table hash-table) &rest keys)
   (dolist (key keys table)
@@ -137,7 +147,7 @@
                  (setf (gethash k answer-table) v)))
              (representation table))
 
-    (make-instance 'hash-table
+    (make-instance (class-of table)
                    :representation answer-table
                    :metadata '())))
 
@@ -152,7 +162,7 @@
                  (setf (gethash k answer-table) v)))
              (representation table))
 
-    (make-instance 'hash-table
+    (make-instance (class-of table)
                    :representation answer-table
                    :metadata '())))
 

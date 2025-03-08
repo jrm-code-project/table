@@ -3,10 +3,13 @@
 (defpackage "TABLE"
   (:shadow "HASH-TABLE")
   (:import-from "ALEXANDRIA"
+                "ALIST-HASH-TABLE"
+                "ALIST-PLIST"
                 "COPY-HASH-TABLE"
                 "DELETE-FROM-PLIST"
                 "HASH-TABLE-ALIST"
                 "HASH-TABLE-KEYS"
+                "HASH-TABLE-PLIST"
                 "HASH-TABLE-VALUES"
                 "PLIST-ALIST"
                 "PLIST-HASH-TABLE"

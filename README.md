@@ -1,5 +1,5 @@
 # table
-An abstract table api with various concrete implementations such as alist, plist, hash-table, and wttree.
+An abstract table api with various mutable and immmutable concrete implementations, such as property lists, association lists, hash tables, and balanced trees.
 
 ## Installation
 
@@ -11,10 +11,38 @@ You will need `alexandria`, `closer-mop`, `named-let`, `series`, and `str`
 
 ---
 
+### Classes
+Four implementation strategies are provided, with a mutable and immutable variant for each strategy.  Tables are instances of classes of the appropriate strategy.  `immutable-` tables can never be side effected, and an error is signalled on any attempt to do so.
+
+`alist-table`\
+`immutable-alist`\
+a table implemented as an association list\
+operations on alists are typically linear in the number of entries, but fast enough for small tables
+
+`hash-table`\
+`immutable-hash-table`\
+a table implemented as a hash-table
+many operations on hash tables are O(1), but hash tables waste space\
+some operations on hash tables are O(n)
+
+`plist-table`\
+`immutable-plist`\
+a table implemented as a property list\
+operations on plists are typically linear in the number of entries, but fast enough for small plists
+keys are always compared with eql
+
+`wttree-table`\
+`immutable-wttree`\
+a table implemented as a weight-balanced tree
+operations on weight-balanced trees are typically O(log n) in the number of entries, leading to algoriths almost as fast as a hash table.  Entries preserve order of keys, so finding the smallest and largest key in the table is O(log n)
+
 ### Constructors
+Tables are constructed _ab initio_ by instantiating the appropriate class.  If no _initargs_ are suppled, an empty table with default properties is constructed.  The following initargs are valid:
+    - `:test` specifies the key equivalance predicate for the table.  plist-tables ignore this and always use `'eql`
+    - `:initial-contents` specifies an initial set of entries to be placed in the table.  This may be specified as an association list, a property list, a hash table, or another instance of a table object.
 
 `make-instance` _implementation_ `&rest` _initargs_\
-Create an empty table.  Supported implementations are `'alist-table`, `'plist-table`, `'hash-table`, and `'wttree-table`
+Create a table.
 
 ### Predicates
 
@@ -22,11 +50,15 @@ Create an empty table.  Supported implementations are `'alist-table`, `'plist-ta
 `table?` _object_\
 Returns T iff _object_ is a table.
 
+`table/immutable?` _object_\
+`table/immutablep` _object_\
+Returns T if _object_ is an immutable table.
+
 `table/empty?` _table_\
 Returns T if there are no entries in _table_.
 
 `table/equal?` _table1_ _table2_ `&optional` (_test_ `#'eql`)\
-Returns T if _table1_ and _table2_ contain the same entries.  Entry values are compared using _test_.
+Returns T if _table1_ and _table2_ contain the same entries.  Entry keys are compared by the key compare function associated with _table1_.  Entry values are compared using _test_.
 
 `table/subset?` _subtable_ _supertable_ `&optional` (_test_ `#'eql`)\
 Returns T if every entry in _subtable_ is contained in _supertable_.  Entry values are compare using _test_.
@@ -37,7 +69,7 @@ Returns T if every entry in _subtable_ is contained in _supertable_.  Entry valu
 Returns a plist associated with the table that can be used for metadata.  Guaranteed to not be used by the implementation.
 
 `representation` _table_\
-Returns the underlying representation of the table (an alist, plist, hashtable, or wttree-node).  Exposes the rep.
+Returns the underlying representation of the table (an alist, plist, hashtable, or wttree-node).  If used on an immutable table, a copy of the representation is returned.
 
 `table/keys` _table_\
 Returns a list of the keys in _table_.  List structure may be shared, so do not modify it.
@@ -59,7 +91,7 @@ Iterate over _key_, _value_ pairs in _table_ running _body_ on each pair.  Retur
 
 ### Destructive operations
 
-These operations modify the table object and possibly modify any shared data structures within in the table.
+These operations modify the table object and possibly modify any shared data structures within in the table.  An error is signalled if one of these is called on an immutable table.
 
 `table/clear!` _table_\
 Delete all entries from _table_.

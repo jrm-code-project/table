@@ -2,6 +2,21 @@
 
 (in-package "TABLE")
 
+(define-condition attempted-mutation-error (error)
+                  ((function-name :initarg :function-name
+                                  :reader attempted-mutation-error-function-name)
+                   (immutable-object :initarg :immutable-object
+                                     :reader attempted-mutation-error-immutable-object))
+  (:report (lambda (condition stream)
+             (format stream "Attempt to mutate ~A in ~A."
+                     (attempted-mutation-error-immutable-object condition)
+                     (attempted-mutation-error-function-name condition)))))
+
+(defun raise-attempted-mutation (function-name object)
+  (error 'attempted-mutation-error
+         :function-name function-name
+         :immutable-object object))
+
 ;;;
 ;;; METADATA
 ;;;
@@ -26,9 +41,19 @@
   (:documentation "Sets the representation of the object."))
 
 (defclass table (metadata)
-  ((representation :accessor representation
-        :initarg :representation
-        :initform nil)))
+  ((representation
+    :reader representation
+    :initarg :representation
+    :initform nil)))
+
+(defmethod (setf representation) (new-value (table table))
+  (setf (slot-value table 'representation) new-value))
+
+(defclass immutable-table (table)
+  ())
+
+(defmethod (setf representation) :before (new-value (table immutable-table))
+  (raise-attempted-mutation '(setf representation) table))
 
 (defgeneric table? (object)
   (:documentation "Returns T if object is a table, NIL otherwise.")
@@ -39,6 +64,16 @@
   (:documentation "Returns T if object is a table, NIL otherwise.")
   (:method ((object t))   nil)
   (:method ((object table)) t))
+
+(defgeneric immutable-table? (object)
+  (:documentation "Returns T if object is an immutable-table, NIL otherwise.")
+  (:method ((object t))   nil)
+  (:method ((object immutable-table)) t))
+
+(defgeneric immutable-tablep (object)
+  (:documentation "Returns T if object is an immutable-table, NIL otherwise.")
+  (:method ((object t))   nil)
+  (:method ((object immutable-table)) t))
 
 (defmethod print-object ((table table) stream)
   (print-unreadable-object (table stream :type t)
@@ -88,6 +123,8 @@
 
 (defgeneric table/clear! (table)
   (:documentation "Removes all entries from the table (destructive).")
+  (:method :before ((table immutable-table))
+    (raise-attempted-mutation 'table/clear! table))
   (:method ((table t))
     (error "Not a table: ~S" table))
   (:method ((table table))
@@ -107,8 +144,11 @@
 (defgeneric table/delete (table &rest keys)
   (:documentation "Destructive removal of keys from a table.  Returns the old table after it is modified.")
   (:method ((table t) &rest keys)
-    (declare (ignore key keys))
+    (declare (ignore keys))
     (error "Not a table: ~S" table))
+  (:method :before ((table immutable-table) &rest keys)
+    (declare (ignore keys))
+    (raise-attempted-mutation 'table/delete table))
   (:method ((table table) &rest keys)
     (table/delete-keys table keys)))
 
@@ -117,13 +157,15 @@
   (:method ((table t) predicate)
     (declare (ignore predicate))
     (error "Not a table: ~S" table))
+  (:method :before ((table immutable-table) predicate)
+    (declare (ignore predicate))
+    (error "Table is immutable."))
   (:method ((table table) predicate)
     (setf (representation table)
           (representation (fold-table (lambda (acc key value)
                                         (if (funcall predicate key value)
                                             acc
-                                            (progn (table/insert! acc key value)
-                                                   acc)))
+                                            (table/insert! acc key value)))
                                       (table/clear table)
                                       table)))
     table))
@@ -133,13 +175,14 @@
   (:method ((table t) predicate)
     (declare (ignore predicate))
     (error "Not a table: ~S" table))
+  (:method ((table immutable-table) predicate)
+    (declare (ignore predicate))
+    (error "Table is immutable."))
   (:method ((table table) predicate)
     (setf (representation table)
           (representation (fold-table (lambda (acc key value)
                                         (if (funcall predicate key value)
-                                            (progn
-                                              (table/insert! acc key value)
-                                              acc)
+                                            (table/insert! acc key value)
                                             acc))
                                       (table/clear table)
                                       table)))
@@ -150,6 +193,9 @@
   (:method ((table t) key-list)
     (declare (ignore key-list))
     (error "Not a table: ~S" table))
+  (:method ((table immutable-table) predicate)
+    (declare (ignore predicate))
+    (error "Table is immutable."))
   (:method ((table table) key-list)
     (table/delete-if table (lambda (key value)
                              (declare (ignore value))
@@ -176,6 +222,9 @@
     (error "Not tables: ~s" (list left right)))
   (:method ((left table) right)
     (error "Not a table: ~s" right))
+  (:method ((left immutable-table) right)
+    (declare (ignore right))
+    (error "Table is immutable."))
   (:method (left (right table))
     (error "Not a table: ~s" left))
   (:method ((left table) (right table))
@@ -197,6 +246,9 @@
   (:method ((table t) key value)
     (declare (ignore key value))
     (error "Not a table: ~S" table))
+  (:method :before ((table immutable-table) key value)
+    (declare (ignore key value))
+    (raise-attempted-mutation 'table/insert! table))
   (:method ((table table) key value)
     (error "Not implemented by table subclass.")))
 
@@ -226,6 +278,9 @@
   (:method ((left table) right)
     (declare (ignore left right))
     (error "Right is not a table."))
+  (:method ((left immutable-table) right)
+    (declare (ignore right))
+    (error "Table is immutable."))
   (:method (left (right table))
     (declare (ignore left right))
     (error "Left is not a table."))
@@ -277,6 +332,8 @@
   (:documentation "Returns two values, the maximal key, its associated value.  Table is modified.")
   (:method ((table t))
     (error "Not a table: ~s" table))
+  (:method :before ((table immutable-table))
+    (raise-attempted-mutation 'table/pop-maximum! table))
   (:method ((table table))
     (error "Not implemented by table subclass.")))
 
@@ -291,6 +348,8 @@
   (:documentation "Returns two values, the minimal key and its associated value.  Table is modified.")
   (:method ((table t))
     (error "Not a table: ~s" table))
+  (:method :before ((table immutable-table))
+    (raise-attempted-mutation 'table/pop-minimum! table))
   (:method ((table table))
     (error "Not implemented by table subclass.")))
 
@@ -310,7 +369,6 @@
   (:method ((table table) keys)
     (let ((predicate (lambda (key value)
                        (declare (ignore value))
-                       (format t  "~&Testing if ~s in in ~s~%" key keys)
                        (member key keys :test (table/test table)))))
       (table/remove-if table predicate))))
 
@@ -322,10 +380,8 @@
   (:method ((table table) predicate)
     (fold-table (lambda (acc key value)
                   (if (funcall predicate key value)
-                      (progn (format t  "~&Predicate passed, dropping ~s~%" key)
-                             acc)
-                      (progn (format t "~&Predicate failed, inserting ~s~%" key)
-                             (table/insert acc key value))))
+                      acc
+                      (table/insert acc key value)))
                 (table/clear table)
                 table)))
 
@@ -347,6 +403,8 @@
   (:method ((table t) &rest keys)
     (declare (ignore keys))
     (error "Not a table: ~S" table))
+  (:method :before ((table immutable-table) &rest keys)
+    (raise-attempted-mutation 'table/remove! table))
   (:method ((table table) &rest keys)
     (table/delete-keys table keys)))
 
@@ -355,6 +413,8 @@
   (:method ((table t) keys)
     (declare (ignore keys))
     (error "Not a table: ~S" table))
+  (:method :before ((table immutable-table) keys)
+    (raise-attempted-mutation 'table/remove-keys! table))
   (:method ((table table) keys)
     (table/delete-keys table keys)))
 
@@ -424,14 +484,15 @@
     (error "Not tables: ~s" (list left right)))
   (:method ((left table) right)
     (error "Not a table: ~s" right))
+  (:method :before ((left immutable-table) right)
+    (raise-attempted-mutation 'table/union! left))
   (:method (left (right table))
     (error "Not a table: ~s" left))
   (:method ((left table) (right table))
     (let ((not-found (cons nil nil)))
       (fold-table (lambda (acc key value)
                     (if (eq (table/lookup acc key not-found) not-found)
-                        (progn (table/insert! acc key value)
-                               acc)
+                        (table/insert! acc key value)
                         acc))
                   left
                   right))))
@@ -455,6 +516,8 @@
     (error "Not tables: ~s" (list left right)))
   (:method ((left table) right merge)
     (error "Not a table: ~s" right))
+  (:method :before ((left immutable-table) right merge)
+    (raise-attempted-mutation 'table/union-merge! left))
   (:method (left (right table) merge)
     (error "Not a table: ~s" left))
   (:method ((left table) (right table) merge)
@@ -462,10 +525,8 @@
       (fold-table (lambda (acc key value)
                     (let ((probe (table/lookup acc key not-found)))
                       (if (eq probe not-found)
-                          (progn (table/insert! acc key value)
-                                 acc)
-                          (progn (table/insert! acc key (funcall merge key probe value))
-                                 acc))))
+                          (table/insert! acc key value)
+                          (table/insert! acc key (funcall merge key probe value)))))
                   left
                   right))))
 
@@ -481,15 +542,67 @@
          :initarg :test
          :initform #'eql)))
 
+(defmethod shared-initialize :after ((instance alist-table) slot-names &rest initargs &key &allow-other-keys)
+  (when (or (eq slot-names 't)
+            (member 'representation slot-names))
+    (if (member :representation initargs)
+        (setf (slot-value instance 'representation) (getf initargs :representation))
+        (let* ((default (cons nil nil))
+               (initial-contents (getf initargs :initial-contents) default))
+          (unless (eq initial-contents default)
+            (setf (slot-value instance 'representation)
+                  (cond ((null initial-contents) nil)
+                        ((every #'consp initial-contents) (copy-alist initial-contents))
+                        ((consp initial-contents)         (plist-alist initial-contents))
+                        ((hash-table-p initial-contents)  (hash-table-alist initial-contents))
+                        ((table? initial-contents)        (table->alist initial-contents))
+                        (t (error "Unrecognized initial contents.")))))))))
+
+(defclass immutable-alist (alist-table immutable-table)
+  ())
+
 (defclass hash-table (table)
   ())
 
 (defmethod shared-initialize :after ((instance hash-table) slot-names &rest initargs &key &allow-other-keys)
-  (when (or (eq slot-names 't) (member :representation slot-names))
-    (unless (getf initargs :representation)
-      (setf (representation instance) (apply #'make-hash-table initargs)))))
+  (when (or (eq slot-names 't)
+            (member 'representation slot-names))
+    (if (member :representation initargs)
+        (setf (slot-value instance 'representation) (getf initargs :representation))
+        (let* ((default (cons nil nil))
+               (initial-contents (getf initargs :initial-contents) default))
+          (unless (eq initial-contents default)
+            (setf (slot-value instance 'representation)
+                  (cond ((null initial-contents)          (make-hash-table :test (getf initargs :test 'eql)))
+                        ((every #'consp initial-contents) (alist-hash-table  initial-contents))
+                        ((consp initial-contents)         (plist-hash-table  initial-contents))
+                        ((hash-table-p initial-contents)  (copy-hash-table   initial-contents))
+                        ((table? initial-contents)        (table->hash-table initial-contents))
+                        (t (error "Unrecognized initial contents.")))))))))
+
+(defclass immutable-hash-table (hash-table immutable-table)
+  ())
 
 (defclass plist-table (table)
+  ())
+
+(defmethod shared-initialize :after ((instance plist-table) slot-names &rest initargs &key &allow-other-keys)
+  (when (or (eq slot-names 't)
+            (member 'representation slot-names))
+    (if (member :representation initargs)
+        (setf (slot-value instance 'representation) (getf initargs :representation))
+        (let* ((default (cons nil nil))
+               (initial-contents (getf initargs :initial-contents) default))
+          (unless (eq initial-contents default)
+            (setf (slot-value instance 'representation)
+                  (cond ((null initial-contents) nil)
+                        ((every #'consp initial-contents) (alist-plist       initial-contents))
+                        ((consp initial-contents)         (copy-list         initial-contents))
+                        ((hash-table-p initial-contents)  (hash-table-plist  initial-contents))
+                        ((table? initial-contents)        (table->plist      initial-contents))
+                        (t (error "Unrecognized initial contents.")))))))))
+
+(defclass immutable-plist (plist-table immutable-table)
   ())
 
 (defclass wttree-table (table)
@@ -497,9 +610,30 @@
          :initarg :test
          :initform 'equal)))
 
+(defmethod shared-initialize :after ((instance wttree-table) slot-names &rest initargs &key &allow-other-keys)
+  (when (or (eq slot-names 't)
+            (member 'representation slot-names))
+    (if (member :representation initargs)
+        (setf (slot-value instance 'representation) (getf initargs :representation))
+        (let* ((default (cons nil nil))
+               (initial-contents (getf initargs :initial-contents) default))
+          (unless (eq initial-contents default)
+            (setf (slot-value instance 'representation)
+                  (cond ((null initial-contents) nil)
+                        ((every #'consp initial-contents) (alist->node       initial-contents))
+                        ((consp initial-contents)         (plist->node       initial-contents))
+                        ((hash-table-p initial-contents)  (hash-table->node  initial-contents))
+                        ((table? initial-contents)        (table->node       initial-contents))
+                        (t (error "Unrecognized initial contents.")))))))))
+
+(defclass immutable-wttree (wttree-table immutable-table)
+  ())
+
 (defgeneric table->alist (object)
   (:method ((object t))
     (error "Not a table: ~S" object))
+  (:method ((object immutable-alist))
+    (copy-alist (representation object)))
   (:method ((object alist-table))
     (representation object)))
 
@@ -507,18 +641,24 @@
   (:method ((object t) &rest initargs)
     (declare (ignore initargs))
     (error "Not a table: ~S" object))
+  (:method ((object immutable-hash-table) &rest initargs)
+    (copy-hash-table (representation object)))
   (:method ((object hash-table) &rest initargs)
     (declare (ignore initargs))
     (representation object)))
 
 (defgeneric table->plist (object)
   (:method ((object t))
-    (error "Not a table: ~S" object))
+    (error "Not a table: ~S" object))  
+  (:method ((object immutable-plist))
+    (copy-list (representation object)))
   (:method ((object plist-table))
     (representation object)))
 
 (defgeneric table->node (object)
   (:method ((object t))
     (error "Not a table: ~S" object))
+  (:method ((object immutable-wttree))
+    (node/copy (representation object)))
   (:method ((object wttree-table))
     (representation object)))
