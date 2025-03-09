@@ -4,7 +4,7 @@
   (:shadow "HASH-TABLE")
   (:import-from "ALEXANDRIA"
                 "ALIST-HASH-TABLE"
-                "ALIST-PLIST"
+                ;; "ALIST-PLIST"
                 "COPY-HASH-TABLE"
                 "DELETE-FROM-PLIST"
                 "DOPLIST"
@@ -12,7 +12,7 @@
                 "HASH-TABLE-KEYS"
                 "HASH-TABLE-PLIST"
                 "HASH-TABLE-VALUES"
-                "PLIST-ALIST"
+                ;; "PLIST-ALIST"
                 "PLIST-HASH-TABLE"
                 "REMOVE-FROM-PLIST"
                 )
@@ -24,8 +24,6 @@
                           "MULTIPLE-VALUE-BIND"
                           )
   (:export
-   "ALIST-FOLD-LEFT"
-   "ALIST-FOLD-RIGHT"
    "ALIST-KEYS"
    "ALIST-TABLE"
    "ALIST-VALUES"
@@ -41,8 +39,6 @@
    "HASH-TABLE-FOLD-LEFT"
    "HASH-TABLE-FOLD-RIGHT"
    "METADATA"
-   "PLIST-FOLD-LEFT"
-   "PLIST-FOLD-RIGHT"
    "PLIST-KEYS"
    "PLIST-TABLE"
    "PLIST-VALUES"

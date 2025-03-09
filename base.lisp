@@ -15,6 +15,9 @@
 
 ;;; Some basic operations on table-like things.
 
+(defun alist-plist (alist) (alist-fold-right #'list* alist nil))
+(defun plist-alist (plist) (plist-fold-right #'acons plist nil))
+
 (defun alist-keys   (alist) (mapcar #'car alist))
 (defun alist-values (alist) (mapcar #'cdr alist))
 
