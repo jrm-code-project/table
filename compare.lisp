@@ -2,19 +2,6 @@
 
 (in-package "TABLE")
 
-(defun alist? (object)
-  (or (null object)
-      (and (consp object)
-           (every #'consp object))))
-
-(defun plist? (object)
-  (or (null object)
-      (and (consp object)
-           (or (numberp (car object))
-               (symbolp (car object)))
-           (consp (cdr object))
-           (plist? (cddr object)))))
-
 (defgeneric less (left right)
   (:method (left (right null))    nil)
   (:method ((left null) right)    (not (null right)))
