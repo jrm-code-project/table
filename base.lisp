@@ -6,6 +6,8 @@
   (and (consp thing)
        (every #'consp thing)))
 
+(deftype alist () '(satisfies alist?))
+
 (defun plist? (thing)
   (or (null thing)
       (and (consp thing)
@@ -13,7 +15,11 @@
            (consp (cdr thing))
            (plist? (cddr thing)))))
 
+(deftype plist () '(satisfies plist?))
+
 ;;; Some basic operations on table-like things.
+
+(defun copy-plist (plist) (plist-fold-right #'list* plist nil))
 
 (defun alist-plist (alist) (alist-fold-right #'list* alist nil))
 (defun plist-alist (plist) (plist-fold-right #'acons plist nil))
