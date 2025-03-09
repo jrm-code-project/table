@@ -15,24 +15,24 @@ You will need `alexandria`, `closer-mop`, `named-let`, `series`, and `str`
 Four implementation strategies are provided, with a mutable and immutable variant for each strategy.  Tables are instances of classes of the appropriate strategy.  `immutable-` tables can never be side effected, and an error is signalled on any attempt to do so.
 
 `alist-table`\
-`immutable-alist`\
+`immutable-alist`
   - a table implemented as an association list
   - operations on alists are typically linear in the number of entries, but fast enough for small tables
 
 `hash-table`\
-`immutable-hash-table`\
+`immutable-hash-table`
   - a table implemented as a hash-table
   - many operations on hash tables are O(1), but hash tables waste space
   - some operations on hash tables are O(n)
 
 `plist-table`\
-`immutable-plist`\
+`immutable-plist`
   - a table implemented as a property list
   - operations on plists are typically linear in the number of entries, but fast enough for small plists
   - keys are always compared with eql
 
 `wttree-table`\
-`immutable-wttree`\
+`immutable-wttree`
   - a table implemented as a weight-balanced tree
   - operations on weight-balanced trees are typically O(log n) in the number of entries, leading to algoriths almost as fast as a hash table.
   - Entries preserve order of keys, so finding the smallest and largest key in the table is O(log n)
