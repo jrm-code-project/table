@@ -2,53 +2,51 @@
 
 (in-package "TABLE")
 
+(defun alist? (thing)
+  (and (consp thing)
+       (every #'consp thing)))
+
+(defun plist? (thing)
+  (or (null thing)
+      (and (consp thing)
+           (atom (car thing))
+           (consp (cdr thing))
+           (plist? (cddr thing)))))
+
 ;;; Some basic operations on table-like things.
-
-(defun alist-fold-left (fn init alist)
-  (fold-left (lambda (acc entry)
-               (funcall fn acc (car entry) (cdr entry)))
-             init
-             alist))
-
-(defun alist-fold-right (fn alist final)
-  (fold-left (lambda (acc entry)
-                (funcall fn (car entry) (cdr entry) acc))
-              final
-              (reverse alist)))
 
 (defun alist-keys   (alist) (mapcar #'car alist))
 (defun alist-values (alist) (mapcar #'cdr alist))
 
+(defun plist-maximum (plist)
+  (plist-fold-left (lambda (max key value)
+                     (declare (ignore value))
+                     (if (greater key max) key max))
+                   (car plist)
+                   (cddr plist)))
 
-(defun hash-table-fold-left (fn init hashtable)
-  (with-hash-table-iterator (next hashtable)
-    (let iter ((acc init))
-      (multiple-value-bind (entry? key value) (next)
-        (if entry?
-            (iter (funcall fn acc key value))
-            acc)))))
+(defun plist-minimum (plist)
+  (plist-fold-left (lambda (min key value)
+                     (declare (ignore value))
+                     (if (less key min) key min))
+                   (car plist)
+                   (cddr plist)))
 
-(defun hash-table-fold-right (fn hashtable final)
-  (with-hash-table-iterator (next hashtable)
-    (let iter ((acc final))
-      (multiple-value-bind (entry? key value) (next)
-        (if entry?
-            (iter (funcall fn key value acc))
-            acc)))))
+(defun plist-pop-maximum (plist)
+  (let ((min (plist-maximum plist)))
+    (values min (getf plist min) (remove-from-plist plist min))))
 
-(defun plist-fold-left (fn init plist)
-  (cond ((consp plist) (if (consp (cdr plist))
-                           (plist-fold-left fn (funcall fn init (car plist) (cadr plist))
-                                            (cddr plist))
-                           (error "Improper plist.")))
-        ((null plist) init)
-        (t (error "Improper plist."))))
+(defun plist-pop-minimum (plist)
+  (let ((min (plist-minimum plist)))
+    (values min (getf plist min) (remove-from-plist plist min))))
 
-(defun plist-fold-right (fn plist final)
-  (plist-fold-left (lambda (acc value key)
-                     (funcall fn key value acc))
-                   final
-                   (reverse plist)))
+(defun plist-pop-maximum! (plist)
+  (let ((min (plist-minimum plist)))
+    (values min (getf plist min) (delete-from-plist plist min))))
+
+(defun plist-pop-minimum! (plist)
+  (let ((min (plist-minimum plist)))
+    (values min (getf plist min) (delete-from-plist plist min))))
 
 (defun plist-keys   (plist)
   (plist-fold-right
@@ -62,6 +60,29 @@
    plist
    nil))
 
+(defun symbol-plist-pop-maximum (symbol)
+  (let ((plist (symbol-plist symbol))
+        (sym* (gensym (concatenate 'string (symbol-name symbol) "-"))))
+    (multiple-value-bind (key value plist*) (plist-pop-maximum plist)
+      (setf (symbol-plist sym*) plist*)
+      (values key value sym*))))
 
+(defun symbol-plist-pop-minimum (symbol)
+  (let ((plist (symbol-plist symbol))
+        (sym* (gensym (concatenate 'string (symbol-name symbol) "-"))))
+    (multiple-value-bind (key value plist*) (plist-pop-minimum plist)
+      (setf (symbol-plist sym*) plist*)
+      (values key value sym*))))
 
+(defun symbol-plist-pop-maximum! (symbol)
+  (let ((plist (symbol-plist symbol)))
+    (multiple-value-bind (key value plist*) (plist-pop-maximum! plist)
+      (setf (symbol-plist symbol) plist*)
+      (values key value))))
+
+(defun symbol-plist-pop-minimum! (symbol)
+  (let ((plist (symbol-plist symbol)))
+    (multiple-value-bind (key value plist*) (plist-pop-minimum! plist)
+      (setf (symbol-plist symbol) plist*)
+      (values key value))))
 

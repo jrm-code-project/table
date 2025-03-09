@@ -7,6 +7,7 @@
                 "ALIST-PLIST"
                 "COPY-HASH-TABLE"
                 "DELETE-FROM-PLIST"
+                "DOPLIST"
                 "HASH-TABLE-ALIST"
                 "HASH-TABLE-KEYS"
                 "HASH-TABLE-PLIST"

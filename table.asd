@@ -12,14 +12,26 @@
   :source-control (:git "https://github.com/jrm-code-project/table.git")
   :version "0.5.0"
   :depends-on ("alexandria" "closer-mop" "named-let" "series" "str")
-  :components ((:file "alist-table"  :depends-on ("generics" "package"))
+  :components ((:file "alist-table"  :depends-on ("base"
+                                                  "compare"
+                                                  "generics"
+                                                  "package"))
                (:file "base"         :depends-on ("package"))
                (:file "compare"      :depends-on ("package"))
                (:file "generics"     :depends-on ("package"))
-               (:file "hash-table"   :depends-on ("generics" "package"))
-               (:file "node"         :depends-on ("package"))
+               (:file "hash-table"   :depends-on ("base"
+                                                  "compare"
+                                                  "generics"
+                                                  "package"))
+               (:file "node"         :depends-on ("base" "compare" "package"))
                (:file "package")
-               (:file "plist-table"  :depends-on ("generics"
+               (:file "plist-table"  :depends-on ("base"
+                                                  "compare"
+                                                  "generics"
+                                                  "package"))
+               (:file "symbol"       :depends-on ("base"
+                                                  "compare"
+                                                  "generics"
                                                   "package"))
                (:file "table"        :depends-on ("alist-table"
                                                   "compare"
@@ -38,7 +50,8 @@
                                                   "plist-table"
                                                   "table"
                                                   "wttree-table"))
-               (:file "wttree-table" :depends-on ("compare"
+               (:file "wttree-table" :depends-on ("base"
+                                                  "compare"
                                                   "generics"
                                                   "node"
                                                   "package"))

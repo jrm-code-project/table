@@ -16,30 +16,34 @@ Four implementation strategies are provided, with a mutable and immutable varian
 
 `alist-table`\
 `immutable-alist`\
-a table implemented as an association list\
-operations on alists are typically linear in the number of entries, but fast enough for small tables
+  - a table implemented as an association list
+  - operations on alists are typically linear in the number of entries, but fast enough for small tables
 
 `hash-table`\
 `immutable-hash-table`\
-a table implemented as a hash-table
-many operations on hash tables are O(1), but hash tables waste space\
-some operations on hash tables are O(n)
+  - a table implemented as a hash-table
+  - many operations on hash tables are O(1), but hash tables waste space
+  - some operations on hash tables are O(n)
 
 `plist-table`\
 `immutable-plist`\
-a table implemented as a property list\
-operations on plists are typically linear in the number of entries, but fast enough for small plists
-keys are always compared with eql
+  - a table implemented as a property list
+  - operations on plists are typically linear in the number of entries, but fast enough for small plists
+  - keys are always compared with eql
 
 `wttree-table`\
 `immutable-wttree`\
-a table implemented as a weight-balanced tree
-operations on weight-balanced trees are typically O(log n) in the number of entries, leading to algoriths almost as fast as a hash table.  Entries preserve order of keys, so finding the smallest and largest key in the table is O(log n)
+  - a table implemented as a weight-balanced tree
+  - operations on weight-balanced trees are typically O(log n) in the number of entries, leading to algoriths almost as fast as a hash table.
+  - Entries preserve order of keys, so finding the smallest and largest key in the table is O(log n)
+
+In addition, a symbol may be used as a table.  The entries are stored in the property list of the symbol.
 
 ### Constructors
 Tables are constructed _ab initio_ by instantiating the appropriate class.  If no _initargs_ are suppled, an empty table with default properties is constructed.  The following initargs are valid:
-    - `:test` specifies the key equivalance predicate for the table.  plist-tables ignore this and always use `'eql`
-    - `:initial-contents` specifies an initial set of entries to be placed in the table.  This may be specified as an association list, a property list, a hash table, or another instance of a table object.
+
+  - `:test` specifies the key equivalance predicate for the table.  plist-tables ignore this and always use `'eql`
+  - `:initial-contents` specifies an initial set of entries to be placed in the table.  This may be specified as an association list, a property list, a hash table, or another instance of a table object.
 
 `make-instance` _implementation_ `&rest` _initargs_\
 Create a table.
@@ -58,10 +62,10 @@ Returns T if _object_ is an immutable table.
 Returns T if there are no entries in _table_.
 
 `table/equal?` _table1_ _table2_ `&optional` (_test_ `#'eql`)\
-Returns T if _table1_ and _table2_ contain the same entries.  Entry keys are compared by the key compare function associated with _table1_.  Entry values are compared using _test_.
+Returns T if _table1_ and _table2_ contain the same entries.  Entry keys are compared by the key compare function associated with _table1_.  Entry values are compared using _test_.  This operation is quite expensive as it must iterate through all entries in both tables.
 
 `table/subset?` _subtable_ _supertable_ `&optional` (_test_ `#'eql`)\
-Returns T if every entry in _subtable_ is contained in _supertable_.  Entry values are compare using _test_.
+Returns T if every entry in _subtable_ is contained in _supertable_.  Entry values are compare using _test_.  This operation takes O(n)*O(lookup)
 
 ### Selectors
 
@@ -72,13 +76,13 @@ Returns a plist associated with the table that can be used for metadata.  Guaran
 Returns the underlying representation of the table (an alist, plist, hashtable, or wttree-node).  If used on an immutable table, a copy of the representation is returned.
 
 `table/keys` _table_\
-Returns a list of the keys in _table_.  List structure may be shared, so do not modify it.
+Returns a list of the keys in _table_.  List structure may be shared, so do not modify it.  O(n) in the number of entries in the table.
 
 `table/values` _table_\
-Returns a list of the values in _table_.  List structure may be shared, so do not modify it.
+Returns a list of the values in _table_.  List structure may be shared, so do not modify it. O(n) in the number of entries in the table.
 
 `table/size` _table_\
-Returns the number of entries in _table_.
+Returns the number of entries in _table_.  O(1) for hash tables and trees, O(n) for alists and plists.
 
 `table/test` _table_\
 Returns the predicate used to compare keys in _table_.
@@ -94,7 +98,7 @@ Iterate over _key_, _value_ pairs in _table_ running _body_ on each pair.  Retur
 These operations modify the table object and possibly modify any shared data structures within in the table.  An error is signalled if one of these is called on an immutable table.
 
 `table/clear!` _table_\
-Delete all entries from _table_.
+Delete all entries from _table_.  O(1) for alists, plists, and wttrees.  O(n) for hash tables.
 
 `table/delete` _table_ _key_\
 `table/remove!` _table_ _key_\
@@ -175,4 +179,4 @@ Return _table_ as a property list.  Resulting plist may share storage with _tabl
 ### Implementation class changes
 
 `change-class` _table_ _new-table-class_\
-Modifies the implementation class for the table instance.
+Modifies the implementation class for the table instance.  You cannot change a symbol to a new class, however.
