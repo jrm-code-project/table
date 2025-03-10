@@ -249,23 +249,24 @@
                             (n-join key v   l r))))))))
     (recur key<? node k v)))
 
-(defun alist->node (alist)
-  (alist-fold-left (lambda (node key value)
-                     (node/add #'less node key value))
-                   nil
-                   alist))
+(defun node-alist (node)
+  (node/inorder-fold (lambda (alist node)
+                       (acons (node/k node) (node/v node) alist))
+                     '()
+                     node))
 
-(defun hash-table->node (hash-table)
-  (hash-table-fold-left (lambda (node key value)
-                          (node/add #'less node key value))
-                        nil
-                        hash-table))
+(defun node-hash-table (node &key (test 'equal))
+  (node/inorder-fold (lambda (hash-table node)
+                       (setf (gethash (node/k node) hash-table) (node/v node))
+                       hash-table)
+                     (make-hash-table :test test)
+                     node))
 
-(defun plist->node (plist)
-  (plist-fold-left (lambda (node key value)
-                     (node/add #'less node key value))
-                   nil
-                   plist))
+(defun node-plist (node)
+  (node/inorder-fold (lambda (plist node)
+                       (list* (node/k node) (node/v node) plist))
+                     '()
+                     node))
 
 (defun node/remove (key<? node k)
   (check-type key<? function)

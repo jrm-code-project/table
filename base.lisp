@@ -21,6 +21,7 @@
 
 (defun copy-plist (plist) (plist-fold-right #'list* plist nil))
 
+;; Order preserving versions.
 (defun alist-plist (alist) (alist-fold-right #'list* alist nil))
 (defun plist-alist (plist) (plist-fold-right #'acons plist nil))
 

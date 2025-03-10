@@ -27,129 +27,75 @@
        (table/subset? right  left test)))
 
 ;;; Coercions
+(defmethod table->alist ((table hash-table))   (hash-table-alist (representation table)))
+
+(defmethod table->alist ((table plist-table))  (plist-alist (representation table)))
+
+(defmethod table->alist ((table wttree-table)) (node-alist (representation table)))
+
+(defmethod table->hashtable ((table alist-table)) (alist-hash-table (representation table)))
+
+(defmethod table->hashtable ((table plist-table)) (plist-hash-table (representation table)))
+
+(defmethod table->hashtable ((table wttree-table)) (node-hash-table (representation table) :test (test table)))
+
+(defmethod table->plist ((table alist-table)) (alist-plist (representation table)))
+
+(defmethod table->plist ((table hash-table)) (hash-table-plist (representation table)))
+
+(defmethod table->plist ((table wttree-table)) (node-plist (representation table)))
+
+(defmethod table->node ((table alist-table)) (hash-table-alist (representation table)))
+
+(defmethod table->node ((table hash-table)) (hash-table-node (representation table)))
+
+(defmethod table->node ((table plist-table)) (plist-node (representation table)))
+
 (defmethod update-instance-for-different-class :after ((previous alist-table) (current hash-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-alist (representation previous))
-          (collect-hash keys values))))
+  (setf (representation current) (alist-hash-table (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous alist-table) (current plist-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-alist (representation previous))
-          (collect-plist keys values))))
+  (setf (representation current) (alist-plist (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous alist-table) (current wttree-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-alist (representation previous))
-          (collect-node keys values #'less))))
+  (setf (representation current) (alist-node (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous hash-table) (current alist-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-hash (representation previous))
-          (collect-alist keys values))))
+  (setf (representation current) (hash-table-alist (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous hash-table) (current plist-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-hash (representation previous))
-          (collect-plist keys values))))
+  (setf (representation current) (hash-table-plist (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous hash-table) (current wttree-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-hash (representation previous))
-          (collect-node keys values (if (eql (hash-table-test (representation previous)) 'equalp)
-                                        #'lessp
-                                        #'less)))))
+  (setf (representation current) (hash-table-node (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous plist-table) (current alist-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-plist (representation previous))
-          (collect-alist keys values))))
+  (setf (representation current) (plist-alist (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous plist-table) (current hash-table) &rest initargs)
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-plist (representation previous))
-          (collect-hash keys values :test (getf initargs :test 'eql)))))
+  (declare (ignore initargs))
+  (setf (representation current) (plist-hash-table (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous plist-table) (current wttree-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-plist (representation previous))
-          (collect-node keys values))))
+  (setf (representation current) (plist-node (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous wttree-table) (current alist-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-node (representation previous))
-          (collect-alist keys values))))
+  (setf (representation current) (node-alist (representation previous))))
 
 (defmethod update-instance-for-different-class :after ((previous wttree-table) (current hash-table) &rest initargs)
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-node (representation previous))
-          (collect-hash keys values :test (or (getf initargs :test)
-                                              (if (member (test previous) (list #'lessp 'lessp))
-                                                  'equalp
-                                                  'equal))))))
+  (declare (ignore initargs))
+  (setf (representation current) (node-hash-table (representation previous) :test (test current))))
 
 (defmethod update-instance-for-different-class :after ((previous wttree-table) (current plist-table) &rest initargs)
   (declare (ignore initargs))
-  (setf (representation current)
-        (multiple-value-bind (keys values) (scan-node (representation previous))
-          (collect-plist keys values))))
+  (setf (representation current) (node-plist (representation previous))))
 
-(defmethod table->alist ((table hash-table))
-  (multiple-value-bind (keys values) (scan-hash-table table)
-    (collect-alist keys values)))
-
-(defmethod table->alist ((table plist-table))
-  (multiple-value-bind (keys values) (scan-plist-table table)
-    (collect-alist keys values)))
-
-(defmethod table->alist ((table wttree-table))
-  (multiple-value-bind (keys values) (scan-wttree-table table)
-    (collect-alist keys values)))
-
-(defmethod table->hashtable ((table alist-table))
-  (multiple-value-bind (keys values) (scan-alist-table table)
-    (collect-hash keys values)))
-
-(defmethod table->hashtable ((table plist-table))
-  (multiple-value-bind (keys values) (scan-plist-table table)
-    (collect-hash keys values)))
-
-(defmethod table->hashtable ((table wttree-table))
-  (multiple-value-bind (keys values) (scan-wttree-table table)
-    (collect-hash keys values :test (if (member (test table) (list #'lessp 'lessp))
-                                        'equalp
-                                        'equal))))
-
-(defmethod table->plist ((table alist-table))
-  (multiple-value-bind (keys values) (scan-alist-table table)
-    (collect-plist keys values)))
-
-(defmethod table->plist ((table hash-table))
-  (multiple-value-bind (keys values) (scan-plist-table table)
-    (collect-hash keys values)))
-
-(defmethod table->plist ((table wttree-table))
-  (multiple-value-bind (keys values) (scan-wttree-table table)
-    (collect-alist keys values)))
-
-(defmethod table->node ((table alist-table))
-  (multiple-value-bind (keys values) (scan-alist-table table)
-    (collect-node keys values)))
-
-(defmethod table->node ((table hash-table))
-  (multiple-value-bind (keys values) (scan-hash-table table)
-    (collect-node keys values (if (eql (hash-table-test table) 'equalp)
-                                  #'lessp
-                                  #'less))))
-
-(defmethod table->node ((table plist-table))
-  (multiple-value-bind (keys values) (scan-plist-table table)
-    (collect-node keys values)))
