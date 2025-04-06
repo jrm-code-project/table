@@ -544,7 +544,7 @@
     (if (member :representation initargs)
         (setf (slot-value instance 'representation) (getf initargs :representation))
         (let* ((default (cons nil nil))
-               (initial-contents (getf initargs :initial-contents) default))
+               (initial-contents (getf initargs :initial-contents default)))
           (unless (eq initial-contents default)
             (setf (slot-value instance 'representation)
                   (etypecase initial-contents
@@ -552,6 +552,7 @@
                     (alist      (copy-alist initial-contents))
                     (plist      (plist-alist initial-contents))
                     (hash-table (hash-table-alist initial-contents))
+                    (symbol     (plist-alist (symbol-plist initial-contents)))
                     (table      (table->alist initial-contents)))))))))
 
 (defclass immutable-alist (alist-table immutable-table)
@@ -566,7 +567,7 @@
     (if (member :representation initargs)
         (setf (slot-value instance 'representation) (getf initargs :representation))
         (let* ((default (cons nil nil))
-               (initial-contents (getf initargs :initial-contents) default))
+               (initial-contents (getf initargs :initial-contents default)))
           (unless (eq initial-contents default)
             (setf (slot-value instance 'representation)
                   (etypecase initial-contents
@@ -574,6 +575,7 @@
                     (alist      (alist-hash-table initial-contents))
                     (plist      (plist-hash-table initial-contents))
                     (hash-table (copy-hash-table initial-contents))
+                    (symbol     (plist-hash-table (symbol-plist initial-contents)))
                     (table      (table->hash-table initial-contents)))))))))
 
 (defclass immutable-hash-table (hash-table immutable-table)
@@ -588,7 +590,7 @@
     (if (member :representation initargs)
         (setf (slot-value instance 'representation) (getf initargs :representation))
         (let* ((default (cons nil nil))
-               (initial-contents (getf initargs :initial-contents) default))
+               (initial-contents (getf initargs :initial-contents default)))
           (unless (eq initial-contents default)
             (setf (slot-value instance 'representation)
                   (etypecase initial-contents
@@ -596,6 +598,7 @@
                     (alist      (alist-plist initial-contents))
                     (plist      (copy-plist initial-contents))
                     (hash-table (hash-table-plist initial-contents))
+                    (symbol     (copy-plist (symbol-plist initial-contents)))
                     (table      (table->plist initial-contents)))))))))
 
 (defclass immutable-plist (plist-table immutable-table)
@@ -612,7 +615,7 @@
     (if (member :representation initargs)
         (setf (slot-value instance 'representation) (getf initargs :representation))
         (let* ((default (cons nil nil))
-               (initial-contents (getf initargs :initial-contents) default))
+               (initial-contents (getf initargs :initial-contents default)))
           (unless (eq initial-contents default)
             (setf (slot-value instance 'representation)
                   (etypecase initial-contents
@@ -620,6 +623,7 @@
                     (alist      (alist->node initial-contents))
                     (plist      (plist->node initial-contents))
                     (hash-table (hash-table->node initial-contents))
+                    (symbol     (plist->node (symbol-plist initial-contents)))
                     (table      (table->node initial-contents)))))))))
 
 (defclass immutable-wttree (wttree-table immutable-table)
